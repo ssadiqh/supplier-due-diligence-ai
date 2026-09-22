@@ -5,7 +5,7 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.supplier</groupId>
+    <groupId>com.diligence</groupId>
     <artifactId>supplier-due-diligence</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -14,7 +14,7 @@
     <description>Australian supplier onboarding and counterparty due-diligence assistant</description>
 
     <modules>
-        <module>backend</module>
+        <module>casework-service</module>
     </modules>
 
     <properties>
