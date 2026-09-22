@@ -12,11 +12,12 @@ Phased learning-first approach starting with REST API, progressing through tools
 - **Learning:** Spring REST patterns, database migrations, integration testing with Testcontainers
 - **Status:** All 5 tests passing, committed to repository
 
-### Phase 2: Document Upload & Storage (4 days)
+### Phase 2: Document Upload & Storage (4 days) ✅ COMPLETE
 - **Goal:** Upload and persist PDFs linked to cases
 - **Tech:** Multipart file handling, file I/O, entity relationships
 - **Deliverable:** Upload documents, validate file types, persist metadata
 - **Learning:** Spring file handling, Bean Validation, error handling
+- **Status:** 6 tests passing (3 unit, 3 integration), committed to repository
 
 ### Phase 3: Deterministic Rules & Workflow (4 days)
 - **Goal:** Apply business rules; keep AI out of critical decisions
@@ -135,13 +136,23 @@ docs/               # Architecture, decisions
   - Single UUID ID design (simplified from dual ID)
   - Project Lombok for boilerplate reduction
   - 5 passing tests (3 unit, 2 integration)
-  - Package: com.supplier.diligence
+  - Package: com.diligence.casework
   - Full documentation (phase1_review.html + code walkthrough)
 
-- **Phase 2:** ⏳ Next
-  - Document upload and file storage
+- **Phase 2:** ✅ Complete & Tested
+  - Document upload with multipart file handling
   - One-to-many relationship (Case ↔ Documents)
-  - File validation (type, size)
+  - File validation (PDF only, max 10MB)
+  - File storage in data/case-documents/{caseId}/
+  - REST endpoints (POST upload, GET list, DELETE)
+  - 6 passing tests (3 unit, 3 integration)
+  - Database migration (V2__Create_documents_table.sql)
+  - Package: com.diligence.documents
+
+- **Phase 3:** ⏳ Next
+  - Deterministic rules engine
+  - Rule evaluation service
+  - Business rule enforcement
 
 ---
 

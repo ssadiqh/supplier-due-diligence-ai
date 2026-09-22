@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2: Document Upload & Storage - Code Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --text: #e5e7eb;
+                --bg-dark: #1f2937;
+                --bg-light: #111827;
+                --border: #374151;
+            }
+            :root:not([data-theme="light"]) body {
+                color: #e5e7eb;
+                background: #0f172a;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .container {
+                background: #1f2937;
+            }
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) h3 {
+                color: #d1d5db;
+            }
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .subtitle {
+                color: #9ca3af;
+            }
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .status.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .status.complete {
+                background: #064e3b;
+                color: #d1fae5;
+            }
+        }
+
+        .code-block {
+            background: var(--bg-light);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+
+        pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: var(--bg-light);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .code-file {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .file-name {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .endpoint {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .endpoint {
+                background: #0c2d4d;
+            }
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+
+        .method.post { background: #dcfce7; color: #166534; }
+        .method.get { background: #dbeafe; color: #1e40af; }
+        .method.delete { background: #fee2e2; color: #991b1b; }
+        .method.patch { background: #fef3c7; color: #92400e; }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .method.post { background: #15803d; color: #dcfce7; }
+            :root:not([data-theme="light"]) .method.get { background: #1e40af; color: #dbeafe; }
+            :root:not([data-theme="light"]) .method.delete { background: #7f1d1d; color: #fee2e2; }
+            :root:not([data-theme="light"]) .method.patch { background: #92400e; color: #fef3c7; }
+        }
+
+        .test-results {
+            background: #f0fdf4;
+            border: 2px solid var(--success);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .test-results {
+                background: #064e3b;
+            }
+        }
+
+        .test-count {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Phase 2: Document Upload & Storage</h1>
+        <p class="subtitle">Comprehensive code review and architecture walkthrough</p>
+
+        <div class="status complete">✅ COMPLETE</div>
+
+        <div class="test-results">
+            <div class="test-count">6/6 Tests Passing</div>
+            <p>3 unit tests (DocumentServiceTest) + 3 integration tests (DocumentControllerIntegrationTest)</p>
+        </div>
+
+        <!-- Overview -->
+        <h2>Overview</h2>
+        <p>Phase 2 adds document upload and storage capabilities to the casework-service. Cases can now have multiple PDF documents attached, with validation, file I/O, and database persistence.</p>
+
+        <table>
+            <tr>
+                <th>Aspect</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Goal</td>
+                <td>Upload and persist PDFs linked to cases</td>
+            </tr>
+            <tr>
+                <td>Tech</td>
+                <td>Multipart file handling, file I/O, entity relationships</td>
+            </tr>
+            <tr>
+                <td>Learning</td>
+                <td>Spring file handling, Bean Validation, error handling</td>
+            </tr>
+            <tr>
+                <td>Duration</td>
+                <td>4 days</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>✅ Complete</td>
+            </tr>
+        </table>
+
+        <!-- Architecture -->
+        <h2>Architecture</h2>
+
+        <h3>Entity Relationship</h3>
+        <p>One Case has many Documents (with cascade delete):</p>
+        <div class="code-block">
+            <pre>DueDiligenceCase (1) ──────── (Many) Document
+     id: UUID             id: UUID
+     ...                  fileName: String
+     documents: List<>    fileType: String
+     (cascade delete)     fileSize: Long
+                          filePath: String
+                          uploadedAt: LocalDateTime
+                          uploadedBy: String</pre>
+        </div>
+
+        <h3>Layered Architecture</h3>
+        <div class="section-grid">
+            <div class="card">
+                <h3>📡 Controller</h3>
+                <p><strong>DocumentController</strong></p>
+                <ul class="feature-list">
+                    <li>POST upload endpoint</li>
+                    <li>GET documents list</li>
+                    <li>DELETE document</li>
+                    <li>Error handling</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>⚙️ Service</h3>
+                <p><strong>DocumentService</strong></p>
+                <ul class="feature-list">
+                    <li>File validation</li>
+                    <li>File I/O (save/delete)</li>
+                    <li>Business logic</li>
+                    <li>Exception handling</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>💾 Repository</h3>
+                <p><strong>DocumentRepository</strong></p>
+                <ul class="feature-list">
+                    <li>JPA Repository</li>
+                    <li>Find by caseId</li>
+                    <li>CRUD operations</li>
+                    <li>Auto-generated SQL</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- REST API -->
+        <h2>REST API Endpoints</h2>
+
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/cases/{caseId}/documents</code>
+            <p style="margin-top: 10px;"><strong>Upload a PDF document</strong></p>
+            <p>Multipart form-data with file and metadata.</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/cases/{caseId}/documents</code>
+            <p style="margin-top: 10px;"><strong>List documents for a case</strong></p>
+            <p>Returns array of document metadata.</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/cases/{caseId}/documents/{documentId}</code>
+            <p style="margin-top: 10px;"><strong>Get document details</strong></p>
+            <p>Returns single document metadata.</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method delete">DELETE</span>
+            <code>/api/cases/{caseId}/documents/{documentId}</code>
+            <p style="margin-top: 10px;"><strong>Delete document</strong></p>
+            <p>Removes from database and disk.</p>
+        </div>
+
+        <!-- Code Walkthrough -->
+        <h2>Code Walkthrough</h2>
+
+        <h3>1. Document Entity (JPA)</h3>
+        <div class="code-file">
+            <div class="file-name">Document.java</div>
+            <div class="code-block">
+                <pre>@Entity
+@Table(name = "documents")
+@Data
+@NoArgsConstructor
+public class Document {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "case_id", nullable = false)
+    @JsonIgnore  // Prevent circular JSON serialization
+    private DueDiligenceCase caseEntity;
+
+    @Column(nullable = false)
+    private String fileName;
+
+    @Column(nullable = false)
+    private String fileType;  // application/pdf
+
+    @Column(nullable = false)
+    private Long fileSize;
+
+    @Column(nullable = false)
+    private String filePath;  // Disk location
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime uploadedAt = LocalDateTime.now();
+
+    @Column
+    private String uploadedBy;  // Analyst email
+
+    // Constructor for convenience
+    public Document(DueDiligenceCase caseEntity, String fileName,
+                   String fileType, Long fileSize, String filePath,
+                   String uploadedBy) { ... }
+}</pre>
+            </div>
+            <p><strong>Key Design Decisions:</strong></p>
+            <ul class="feature-list">
+                <li>@JsonIgnore breaks circular reference (Document → Case → Documents)</li>
+                <li>filePath stores absolute disk path for retrieval</li>
+                <li>uploadedAt immutable (updatable = false)</li>
+                <li>UUID for consistency with Case entity</li>
+            </ul>
+        </div>
+
+        <h3>2. Document Service (Business Logic)</h3>
+        <div class="code-file">
+            <div class="file-name">DocumentService.java</div>
+            <div class="code-block">
+                <pre>@Service
+@RequiredArgsConstructor
+public class DocumentService {
+    private final DocumentRepository documentRepository;
+    private final CaseRepository caseRepository;
+
+    @Value("${app.upload.dir:./data/case-documents}")
+    private String uploadDir;
+
+    public Document uploadDocument(UUID caseId, MultipartFile file,
+                                   String uploadedBy) throws IOException {
+        // 1. Validate case exists
+        DueDiligenceCase caseEntity = caseRepository.findById(caseId)
+            .orElseThrow(() -> new RuntimeException("Case not found"));
+
+        // 2. Validate file (PDF only, max 10MB)
+        validateFile(file);
+
+        // 3. Create case directory: data/case-documents/{caseId}/
+        Path casePath = Paths.get(uploadDir, caseId.toString());
+        Files.createDirectories(casePath);
+
+        // 4. Save file with UUID prefix to avoid collisions
+        String fileName = file.getOriginalFilename();
+        String storageName = UUID.randomUUID() + "-" + fileName;
+        Path filePath = casePath.resolve(storageName);
+        Files.write(filePath, file.getBytes());
+
+        // 5. Create and save document record
+        Document document = new Document(
+            caseEntity, fileName, file.getContentType(),
+            file.getSize(), filePath.toString(), uploadedBy
+        );
+        return documentRepository.save(document);
+    }
+
+    public List<Document> getDocumentsByCase(UUID caseId) {
+        return documentRepository.findByCaseEntityId(caseId);
+    }
+
+    public void deleteDocument(UUID documentId) throws IOException {
+        Document document = getDocumentById(documentId);
+
+        // Delete file from disk
+        Path filePath = Paths.get(document.getFilePath());
+        Files.deleteIfExists(filePath);
+
+        // Delete database record
+        documentRepository.deleteById(documentId);
+    }
+
+    private void validateFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new RuntimeException("File is empty");
+        }
+
+        long maxSize = 10 * 1024 * 1024;  // 10MB
+        if (file.getSize() > maxSize) {
+            throw new RuntimeException("File exceeds maximum size of 10MB");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.equals("application/pdf")) {
+            throw new RuntimeException("Only PDF files are allowed");
+        }
+    }
+}</pre>
+            </div>
+            <p><strong>Key Design Decisions:</strong></p>
+            <ul class="feature-list">
+                <li>Validation before file write (fail fast)</li>
+                <li>UUID prefix in storage name prevents collisions</li>
+                <li>Organized by caseId for easy retrieval/cleanup</li>
+                <li>Delete both file and database record (transactional pattern)</li>
+                <li>@Value injection for upload directory config</li>
+            </ul>
+        </div>
+
+        <h3>3. Document Controller (REST API)</h3>
+        <div class="code-file">
+            <div class="file-name">DocumentController.java</div>
+            <div class="code-block">
+                <pre>@RestController
+@RequestMapping("/api/cases/{caseId}/documents")
+@Validated
+@RequiredArgsConstructor
+public class DocumentController {
+    private final DocumentService documentService;
+
+    @PostMapping
+    public ResponseEntity<?> uploadDocument(
+            @PathVariable UUID caseId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "uploadedBy", defaultValue = "system") String uploadedBy) {
+        try {
+            Document document = documentService.uploadDocument(caseId, file, uploadedBy);
+            return ResponseEntity.status(HttpStatus.CREATED).body(document);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(new ErrorResponse(e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Failed to process file: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Document>> getDocuments(@PathVariable UUID caseId) {
+        List<Document> documents = documentService.getDocumentsByCase(caseId);
+        return ResponseEntity.ok(documents);
+    }
+
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<?> deleteDocument(
+            @PathVariable UUID caseId,
+            @PathVariable UUID documentId) {
+        try {
+            documentService.deleteDocument(documentId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Failed to delete file: " + e.getMessage()));
+        }
+    }
+
+    static class ErrorResponse {
+        public String error;
+        ErrorResponse(String error) { this.error = error; }
+    }
+}</pre>
+            </div>
+            <p><strong>Key Design Decisions:</strong></p>
+            <ul class="feature-list">
+                <li>Explicit exception handling with proper HTTP status codes</li>
+                <li>400 BAD_REQUEST for validation failures</li>
+                <li>404 NOT_FOUND for missing documents</li>
+                <li>500 INTERNAL_SERVER_ERROR for I/O failures</li>
+                <li>201 CREATED for successful uploads</li>
+            </ul>
+        </div>
+
+        <h3>4. Database Migration (Flyway)</h3>
+        <div class="code-file">
+            <div class="file-name">V2__Create_documents_table.sql</div>
+            <div class="code-block">
+                <pre>CREATE TABLE documents (
+    id UUID PRIMARY KEY,
+    case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_path TEXT NOT NULL,
+    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by VARCHAR(255)
+);
+
+CREATE INDEX idx_documents_case_id ON documents(case_id);</pre>
+            </div>
+            <p><strong>Key Design Decisions:</strong></p>
+            <ul class="feature-list">
+                <li>CASCADE DELETE: removing a case deletes its documents</li>
+                <li>Index on case_id for efficient queries</li>
+                <li>TIMESTAMP default in database for consistency</li>
+                <li>TEXT for filePath (can be long)</li>
+            </ul>
+        </div>
+
+        <!-- Testing -->
+        <h2>Testing Strategy</h2>
+
+        <h3>Unit Tests (DocumentServiceTest)</h3>
+        <table>
+            <tr>
+                <th>Test</th>
+                <th>Purpose</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>testUploadDocument</td>
+                <td>Verify valid PDF upload succeeds</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>testRejectNonPdfFile</td>
+                <td>Verify non-PDF rejection</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>testRejectOversizedFile</td>
+                <td>Verify size limit (10MB) enforcement</td>
+                <td>✅ Pass</td>
+            </tr>
+        </table>
+
+        <h3>Integration Tests (DocumentControllerIntegrationTest)</h3>
+        <table>
+            <tr>
+                <th>Test</th>
+                <th>Purpose</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>testUploadDocument</td>
+                <td>HTTP POST with multipart file</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>testGetDocuments</td>
+                <td>HTTP GET returns document list</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>testRejectNonPdfFile</td>
+                <td>HTTP POST rejects non-PDF</td>
+                <td>✅ Pass</td>
+            </tr>
+        </table>
+
+        <h3>Test Infrastructure</h3>
+        <ul class="feature-list">
+            <li>H2 in-memory database (no Docker needed)</li>
+            <li>@TempDir for file I/O tests</li>
+            <li>MockMvc for endpoint testing</li>
+            <li>Mockito for repository mocking</li>
+            <li>ReflectionTestUtils for private field injection</li>
+        </ul>
+
+        <!-- File Storage -->
+        <h2>File Storage Strategy</h2>
+
+        <h3>Directory Structure</h3>
+        <pre>data/
+├── case-documents/
+│   ├── {caseId-1}/
+│   │   ├── {documentId-1}-invoice.pdf
+│   │   ├── {documentId-2}-agreement.pdf
+│   │   └── {documentId-3}-financial_report.pdf
+│   ├── {caseId-2}/
+│   │   └── {documentId-4}-audit.pdf
+│   └── test-documents/  (for tests)</pre>
+
+        <h3>Rationale</h3>
+        <ul class="feature-list">
+            <li><strong>UUID prefix:</strong> Avoids filename collisions</li>
+            <li><strong>Case ID folder:</strong> Groups documents by case for easy cleanup</li>
+            <li><strong>Relative path:</strong> Works with Docker volumes</li>
+            <li><strong>Original filename:</strong> Preserved for user readability</li>
+            <li><strong>.gitignore:</strong> data/ directory excluded from git</li>
+        </ul>
+
+        <!-- Configuration -->
+        <h2>Configuration</h2>
+
+        <h3>application.yml (Production)</h3>
+        <div class="code-block">
+            <pre>app:
+  upload:
+    dir: ./data/case-documents
+    max-file-size: 10MB</pre>
+        </div>
+
+        <h3>application-test.yml (Testing)</h3>
+        <div class="code-block">
+            <pre>app:
+  upload:
+    dir: ./data/test-documents
+    max-file-size: 10MB</pre>
+        </div>
+
+        <!-- Updates to Phase 1 -->
+        <h2>Updates to Phase 1 Code</h2>
+
+        <h3>DueDiligenceCase Entity</h3>
+        <p>Added @OneToMany relationship:</p>
+        <div class="code-block">
+            <pre>@OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Document> documents = new ArrayList<>();</pre>
+        </div>
+        <ul class="feature-list">
+            <li>cascade = CascadeType.ALL: delete case → delete documents</li>
+            <li>orphanRemoval = true: delete document → remove from case</li>
+            <li>mappedBy = "caseEntity": bidirectional relationship</li>
+            <li>Added to @EqualsAndHashCode and @ToString exclusions</li>
+        </ul>
+
+        <!-- Dependencies -->
+        <h2>Dependencies Added</h2>
+        <p>No new Maven dependencies required. Phase 2 uses existing Spring libraries:</p>
+        <ul class="feature-list">
+            <li>spring-boot-starter-web (MultipartFile)</li>
+            <li>spring-boot-starter-data-jpa (JPA relationships)</li>
+            <li>jakarta.persistence (JPA annotations)</li>
+        </ul>
+
+        <!-- Git Commits -->
+        <h2>Git History</h2>
+        <table>
+            <tr>
+                <th>Commit</th>
+                <th>Message</th>
+                <th>Files Changed</th>
+            </tr>
+            <tr>
+                <td>0711b2c</td>
+                <td>Implement Phase 2: Document Upload & Storage</td>
+                <td>+8 files, 474 lines</td>
+            </tr>
+            <tr>
+                <td>0b0ff29</td>
+                <td>Fix parent pom module reference</td>
+                <td>1 file modified</td>
+            </tr>
+            <tr>
+                <td>ee1c12d</td>
+                <td>Refactor: Professional naming</td>
+                <td>25 files renamed/updated</td>
+            </tr>
+        </table>
+
+        <!-- Lessons Learned -->
+        <h2>Key Learnings</h2>
+
+        <h3>Spring File Handling</h3>
+        <ul class="feature-list">
+            <li>MultipartFile for HTTP file uploads</li>
+            <li>Java NIO for efficient file I/O (Files.write/delete)</li>
+            <li>Validation before write (fail fast pattern)</li>
+        </ul>
+
+        <h3>JPA Relationships</h3>
+        <ul class="feature-list">
+            <li>@OneToMany for 1:N relationships</li>
+            <li>CASCADE DELETE for referential integrity</li>
+            <li>@JsonIgnore for circular reference prevention</li>
+            <li>Bidirectional mappings (mappedBy)</li>
+        </ul>
+
+        <h3>Error Handling</h3>
+        <ul class="feature-list">
+            <li>Explicit exception handling in controllers</li>
+            <li>Proper HTTP status codes (400, 404, 500)</li>
+            <li>ErrorResponse DTOs for consistency</li>
+            <li>Checked exceptions (IOException) vs unchecked (RuntimeException)</li>
+        </ul>
+
+        <h3>Testing Patterns</h3>
+        <ul class="feature-list">
+            <li>@TempDir for file I/O isolation</li>
+            <li>ReflectionTestUtils for private field injection</li>
+            <li>MockMvc for HTTP endpoint testing</li>
+            <li>H2 in-memory database for unit tests</li>
+        </ul>
+
+        <!-- Checklist -->
+        <h2>Phase 2 Completion Checklist</h2>
+        <ul class="feature-list">
+            <li>Document entity with JPA mapping</li>
+            <li>One-to-many relationship with Case (cascade)</li>
+            <li>DocumentService with validation and I/O</li>
+            <li>DocumentController with REST endpoints</li>
+            <li>Flyway migration (V2)</li>
+            <li>6 passing tests (3 unit + 3 integration)</li>
+            <li>File storage in data/case-documents/</li>
+            <li>Error handling with HTTP status codes</li>
+            <li>Configuration (app.upload.dir)</li>
+            <li>Documentation (this file)</li>
+        </ul>
+
+        <!-- What's Next -->
+        <h2>What's Next (Phase 3)</h2>
+        <p><strong>Deterministic Rules & Workflow</strong></p>
+        <ul class="feature-list">
+            <li>Rule engine for business logic</li>
+            <li>Rule evaluation service</li>
+            <li>Separation of AI vs deterministic decisions</li>
+            <li>Authority boundaries and enforcement</li>
+        </ul>
+
+        <!-- Summary -->
+        <h2>Summary</h2>
+        <p>Phase 2 successfully implements document upload and storage with proper validation, file I/O, and database persistence. The architecture follows Spring best practices with clear separation of concerns (Controller → Service → Repository), comprehensive testing, and professional error handling.</p>
+
+        <p>All 6 tests pass, the code is production-ready, and the foundation is solid for Phase 3 (Rules Engine) and beyond.</p>
+
+    </div>
+</body>
+</html>
