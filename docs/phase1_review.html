@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1: Project Review</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #1e1e1e; color: #e0e0e0; }
+            .container { background: #2d2d2d; }
+            .section { border-color: #444; }
+            code { background: #1a1a1a; color: #a0f0a0; }
+            pre { background: #1a1a1a; }
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            line-height: 1.8;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+        @media (prefers-color-scheme: dark) {
+            h1 { color: #e0e0e0; }
+        }
+        .subtitle {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .subtitle { color: #aaa; }
+        }
+        h2 {
+            font-size: 1.8em;
+            margin: 40px 0 15px 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h3 {
+            font-size: 1.3em;
+            margin: 25px 0 10px 0;
+            color: #2563eb;
+        }
+        @media (prefers-color-scheme: dark) {
+            h3 { color: #60a5fa; }
+        }
+        .section {
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .section { background: #333; border-color: #0ea5e9; }
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-size: 0.85em;
+        }
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .file-tree {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+            margin: 15px 0;
+        }
+        @media (prefers-color-scheme: dark) {
+            .file-tree { background: #1a1a1a; }
+        }
+        .key-point {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .key-point { background: #1e3a5f; border-color: #60a5fa; }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        @media (prefers-color-scheme: dark) {
+            th, td { border-color: #444; }
+        }
+        th {
+            background: #f0f0f0;
+            font-weight: 600;
+        }
+        @media (prefers-color-scheme: dark) {
+            th { background: #333; }
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ Phase 1: Case API & Persistence</h1>
+        <p class="subtitle">Complete Project Review & Learning Guide</p>
+
+        <h2>What We Built</h2>
+        <div class="section">
+            <p>A foundation for the Australian Supplier Due-Diligence AI system. Phase 1 implements the case management API and persistence layer—everything needed to create, retrieve, and manage supplier cases via REST endpoints.</p>
+            <div class="key-point">
+                <strong>Key Achievement:</strong> A working Spring Boot REST API backed by PostgreSQL, with comprehensive tests using an H2 in-memory database. <span class="success">5/5 tests passing.</span>
+            </div>
+        </div>
+
+        <h2>Project Structure</h2>
+        <div class="file-tree">
+supplier-due-diligence-ai/
+├── backend/                          # Spring Boot application
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/supplier/diligence/
+│   │   │   │   ├── SupplierDueDiligenceApplication.java
+│   │   │   │   ├── casework/                    # Case management
+│   │   │   │   │   ├── CaseController.java      # REST endpoints
+│   │   │   │   │   ├── CaseService.java         # Business logic
+│   │   │   │   │   ├── CaseRepository.java      # Data access
+│   │   │   │   │   ├── DueDiligenceCase.java    # JPA entity
+│   │   │   │   │   ├── CaseStatus.java          # Status enum
+│   │   │   │   │   └── CreateCaseRequest.java   # Request DTO
+│   │   │   │   └── config/                      # Spring config (empty, for Phase 2+)
+│   │   │   ├── resources/
+│   │   │   │   ├── application.yml              # App configuration
+│   │   │   │   └── db/migration/
+│   │   │   │       └── V1__Init_schema.sql      # Database schema
+│   │   ├── test/
+│   │   │   ├── java/com/supplier/diligence/
+│   │   │   │   └── casework/
+│   │   │   │       ├── CaseServiceTest.java              # Unit tests (3 tests)
+│   │   │   │       └── CaseControllerIntegrationTest.java # API tests (2 tests)
+│   │   │   └── resources/
+│   │   │       └── application.yml              # Test config (H2 database)
+│   ├── pom.xml                       # Maven dependencies
+│   └── Dockerfile                    # Container image definition
+├── compose.yaml                      # Docker Compose for PostgreSQL
+├── pom.xml                           # Root Maven POM
+├── README.md                         # Quick start guide
+├── .gitignore                        # Git ignore rules
+├── .env.example                      # Environment template
+└── docs/                             # Documentation
+    └── Project Context.md            # Full project brief
+        </div>
+
+        <h2>Core Components Explained</h2>
+
+        <h3>1. DueDiligenceCase Entity</h3>
+        <p><strong>File:</strong> <code>casework/DueDiligenceCase.java</code></p>
+        <p>The central data model. Represents a supplier case that flows through the due-diligence workflow.</p>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td><code>id</code></td>
+                <td>UUID</td>
+                <td>Primary key (auto-generated)</td>
+            </tr>
+            <tr>
+                <td><code>caseId</code></td>
+                <td>String</td>
+                <td>Unique business identifier (SUP-...)</td>
+            </tr>
+            <tr>
+                <td><code>supplierName</code></td>
+                <td>String</td>
+                <td>Supplier name from application</td>
+            </tr>
+            <tr>
+                <td><code>status</code></td>
+                <td>CaseStatus enum</td>
+                <td>Workflow state (SUBMITTED → COMPLETED)</td>
+            </tr>
+            <tr>
+                <td><code>supplierAbn</code></td>
+                <td>String</td>
+                <td>Australian Business Number</td>
+            </tr>
+            <tr>
+                <td><code>createdAt</code></td>
+                <td>LocalDateTime</td>
+                <td>Immutable creation timestamp</td>
+            </tr>
+        </table>
+
+        <h3>2. CaseService</h3>
+        <p><strong>File:</strong> <code>casework/CaseService.java</code></p>
+        <p>Business logic layer. Orchestrates case operations and database interactions.</p>
+        <pre>Key methods:
+- createCase(supplierName, requestedBy)
+- getCaseById(id)
+- getCaseByCaseId(caseId)
+- getAllCases()
+- updateCaseStatus(id, newStatus)
+- updateSupplierInfo(id, abn, legalName)</pre>
+
+        <h3>3. CaseController</h3>
+        <p><strong>File:</strong> <code>casework/CaseController.java</code></p>
+        <p>REST API endpoints. Exposes case operations as HTTP endpoints.</p>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td><code>/api/cases</code></td>
+                <td>Create new case</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td><code>/api/cases</code></td>
+                <td>List all cases</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td><code>/api/cases/{id}</code></td>
+                <td>Get case by UUID</td>
+            </tr>
+            <tr>
+                <td>PATCH</td>
+                <td><code>/api/cases/{id}/status</code></td>
+                <td>Update case status</td>
+            </tr>
+        </table>
+
+        <h3>4. CaseRepository</h3>
+        <p><strong>File:</strong> <code>casework/CaseRepository.java</code></p>
+        <p>Data access layer. Extends Spring Data JPA <code>JpaRepository</code> for automatic CRUD operations.</p>
+        <pre>Custom query:
+- findByCaseId(String caseId)</pre>
+
+        <h2>Technology Stack</h2>
+        <div class="section">
+            <ul>
+                <li><strong>Language:</strong> Java 20</li>
+                <li><strong>Framework:</strong> Spring Boot 3.3.0</li>
+                <li><strong>Database (Production):</strong> PostgreSQL</li>
+                <li><strong>Database (Testing):</strong> H2 in-memory</li>
+                <li><strong>ORM:</strong> Hibernate with JPA</li>
+                <li><strong>Database Versioning:</strong> Flyway</li>
+                <li><strong>Build Tool:</strong> Maven 3.9</li>
+                <li><strong>Testing:</strong> JUnit 5, Mockito, Spring Test</li>
+                <li><strong>Packaging:</strong> Docker</li>
+            </ul>
+        </div>
+
+        <h2>How Data Flows</h2>
+        <div class="section">
+            <p><strong>User Request → API → Service → Repository → Database</strong></p>
+            <ol>
+                <li><strong>POST /api/cases</strong> with JSON body
+                <li><strong>CaseController</strong> validates input using Bean Validation
+                <li><strong>CaseService.createCase()</strong> generates unique caseId, creates entity
+                <li><strong>CaseRepository.save()</strong> persists to database
+                <li><strong>Response</strong> returns created case with UUID and caseId
+            </ol>
+        </div>
+
+        <h2>Testing Strategy</h2>
+        <div class="section">
+            <h3>Unit Tests: CaseServiceTest (3 tests)</h3>
+            <ul>
+                <li>Tests business logic in isolation using mocked repository
+                <li>Verifies case creation, retrieval, status updates
+                <li>No database required—fast execution
+            </ul>
+
+            <h3>Integration Tests: CaseControllerIntegrationTest (2 tests)</h3>
+            <ul>
+                <li>Tests HTTP endpoints using MockMvc
+                <li>Uses real Spring application context with H2 in-memory database
+                <li>Validates request/response serialization and status codes
+            </ul>
+
+            <h3>Test Database</h3>
+            <pre>H2 in-memory (src/test/resources/application.yml):
+- URL: jdbc:h2:mem:testdb
+- User: sa (no password)
+- Schema: auto-created (ddl-auto: create-drop)
+- Flyway: disabled (use Hibernate DDL)</pre>
+        </div>
+
+        <h2>Database Schema</h2>
+        <div class="section">
+            <p><strong>File:</strong> <code>backend/src/main/resources/db/migration/V1__Init_schema.sql</code></p>
+            <pre>CREATE TABLE cases (
+    id UUID PRIMARY KEY,
+    case_id VARCHAR(255) UNIQUE NOT NULL,
+    supplier_name VARCHAR(255) NOT NULL,
+    status VARCHAR(50) DEFAULT 'SUBMITTED',
+    supplier_abn VARCHAR(11),
+    supplier_legal_name VARCHAR(255),
+    requested_by VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE INDEX idx_cases_case_id ON cases(case_id);
+CREATE INDEX idx_cases_status ON cases(status);</pre>
+        </div>
+
+        <h2>Configuration Files</h2>
+
+        <h3>pom.xml (backend)</h3>
+        <p>Maven configuration defining:</p>
+        <ul>
+            <li>Spring Boot 3.3.0 parent</li>
+            <li>Java 20 compiler target</li>
+            <li>Core dependencies: Web, Data-JPA, Validation</li>
+            <li>Database: PostgreSQL driver, Flyway</li>
+            <li>Testing: JUnit, H2, Testcontainers</li>
+        </ul>
+
+        <h3>application.yml (Production)</h3>
+        <ul>
+            <li>PostgreSQL connection (localhost:5432)</li>
+            <li>Hibernate validation mode (no auto-DDL)</li>
+            <li>Flyway migrations enabled</li>
+            <li>Logging level for com.supplier.diligence: DEBUG</li>
+        </ul>
+
+        <h3>application.yml (Test)</h3>
+        <ul>
+            <li>H2 in-memory database</li>
+            <li>Hibernate create-drop (fresh schema each test)</li>
+            <li>Flyway disabled</li>
+            <li>Server port 0 (random, for parallel tests)</li>
+        </ul>
+
+        <h2>What You've Learned</h2>
+        <div class="key-point">
+            <h3>Spring Boot Fundamentals</h3>
+            <ul>
+                <li>Application structure (@SpringBootApplication)</li>
+                <li>Dependency injection and component scanning</li>
+                <li>REST controller design (@RestController, @RequestMapping)</li>
+                <li>Request/response binding with records (Java 16+)</li>
+            </ul>
+        </div>
+
+        <div class="key-point">
+            <h3>JPA & Persistence</h3>
+            <ul>
+                <li>Entity definition and annotations</li>
+                <li>Repository pattern with Spring Data JPA</li>
+                <li>Transaction management</li>
+                <li>Automatic CRUD operations</li>
+            </ul>
+        </div>
+
+        <div class="key-point">
+            <h3>Database Evolution</h3>
+            <ul>
+                <li>Flyway for schema versioning</li>
+                <li>Migration files (V1__*.sql)</li>
+                <li>Database independence (PostgreSQL, H2)</li>
+            </ul>
+        </div>
+
+        <div class="key-point">
+            <h3>Testing</h3>
+            <ul>
+                <li>Unit vs integration testing</li>
+                <li>Mocking with Mockito</li>
+                <li>Test containers and in-memory databases</li>
+                <li>MockMvc for HTTP testing</li>
+            </ul>
+        </div>
+
+        <h2>Next Steps: Phase 2</h2>
+        <div class="section">
+            <p>Phase 2 builds on this foundation by adding:</p>
+            <ul>
+                <li><strong>Document Upload:</strong> Multipart file handling</li>
+                <li><strong>File Storage:</strong> Persist PDFs on disk</li>
+                <li><strong>Case-Document Relationship:</strong> One-to-many JPA mapping</li>
+                <li><strong>File Validation:</strong> Type checking, size limits</li>
+            </ul>
+            <p>The API design will stay the same. We'll just add POST/GET endpoints for documents under each case.</p>
+        </div>
+
+        <h2>How to Run Locally</h2>
+        <div class="section">
+            <pre>1. Start PostgreSQL:
+   docker compose up -d
+
+2. Build:
+   cd backend && mvn clean package
+
+3. Run:
+   mvn spring-boot:run
+
+4. Test:
+   mvn test
+
+5. API endpoint:
+   curl -X POST http://localhost:8080/api/cases \
+     -H "Content-Type: application/json" \
+     -d '{"supplierName":"Acme","requestedBy":"user@example.com"}'</pre>
+        </div>
+
+        <h2>Key Design Decisions</h2>
+        <table>
+            <tr>
+                <th>Decision</th>
+                <th>Reasoning</th>
+            </tr>
+            <tr>
+                <td>Spring Boot (not bare Spring)</td>
+                <td>Faster development, sensible defaults, embedded container</td>
+            </tr>
+            <tr>
+                <td>JPA + Spring Data (not raw SQL)</td>
+                <td>Type safety, automatic queries, database independence</td>
+            </tr>
+            <tr>
+                <td>Flyway migrations</td>
+                <td>Version control for schema, repeatability, CI/CD friendly</td>
+            </tr>
+            <tr>
+                <td>H2 for testing (not PostgreSQL)</td>
+                <td>No Docker required, fast startup, same JPA behavior</td>
+            </tr>
+            <tr>
+                <td>Records for DTOs</td>
+                <td>Less boilerplate, immutable by default, clear intent</td>
+            </tr>
+            <tr>
+                <td>Package: com.supplier.diligence</td>
+                <td>Generic, context-aware, not personal</td>
+            </tr>
+        </table>
+
+        <h2>Code Quality</h2>
+        <div class="section">
+            <ul>
+                <li><span class="success">✓ All tests passing</span></li>
+                <li><span class="success">✓ No compilation errors</span></li>
+                <li><span class="success">✓ Bean validation on inputs</span></li>
+                <li><span class="success">✓ Structured error responses</span></li>
+                <li><span class="success">✓ Proper HTTP status codes</span></li>
+                <li><span class="success">✓ Immutable timestamps</span></li>
+                <li><span class="success">✓ Database indexes on frequently queried fields</span></li>
+            </ul>
+        </div>
+
+        <h2>Summary</h2>
+        <div class="key-point">
+            <p><strong>Phase 1 is a complete learning foundation.</strong> You've built:</p>
+            <ul>
+                <li>A REST API that works (5/5 tests passing)</li>
+                <li>Proper separation of concerns (controller → service → repository)</li>
+                <li>Database persistence with migrations</li>
+                <li>Comprehensive tests (unit + integration)</li>
+                <li>Professional project structure</li>
+            </ul>
+            <p>This foundation supports all future phases without refactoring. Next: document upload and storage in Phase 2.</p>
+        </div>
+    </div>
+</body>
+</html>
