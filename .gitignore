@@ -52,3 +52,14 @@ build/
 
 # Docker
 .dockerignore
+.project
+.settings/org.eclipse.core.resources.prefs
+.settings/org.eclipse.m2e.core.prefs
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings/org.eclipse.core.resources.prefs
+backend/.settings/org.eclipse.jdt.apt.core.prefs
+backend/.settings/org.eclipse.jdt.core.prefs
+backend/.settings/org.eclipse.m2e.core.prefs
+backend/.settings/org.springframework.ide.eclipse.prefs
