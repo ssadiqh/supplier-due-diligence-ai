@@ -10,9 +10,10 @@ The foundation is now complete. You can create, retrieve, and manage supplier ca
 
 - **Spring Boot Application:** RESTful API for case management
 - **PostgreSQL Persistence:** Case entity with status workflow
+- **Project Lombok:** Reduced boilerplate (getters, setters, constructors auto-generated)
 - **Flyway Migrations:** Database versioning and initialization
-- **Testcontainers Integration:** Isolated integration testing with real PostgreSQL
-- **Unit & Integration Tests:** Comprehensive test coverage
+- **H2 In-Memory Testing:** Fast, isolated integration tests (no Docker required)
+- **Unit & Integration Tests:** 5/5 tests passing (3 unit, 2 integration)
 
 ### Quick Start
 
@@ -51,15 +52,17 @@ curl -X POST http://localhost:8080/api/cases \
   }'
 ```
 
-**Response:**
+**Response (201 Created):**
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "caseId": "SUP-1234567890",
   "supplierName": "Acme Corporation",
   "status": "SUBMITTED",
   "requestedBy": "analyst@company.com",
-  "createdAt": "2026-09-22T20:47:00"
+  "supplierAbn": null,
+  "supplierLegalName": null,
+  "createdAt": "2026-09-22T20:47:00",
+  "updatedAt": null
 }
 ```
 

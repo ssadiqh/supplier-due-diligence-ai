@@ -127,11 +127,14 @@ docs/               # Architecture, decisions
 
 ## Progress Tracking
 
-- **Phase 1:** ✅ Complete
-  - Case API with REST endpoints
-  - PostgreSQL persistence with Flyway
+- **Phase 1:** ✅ Complete & Optimized
+  - Case API with REST endpoints (POST/GET/PATCH)
+  - PostgreSQL persistence with Flyway migrations
+  - Single UUID ID design (simplified from dual ID)
+  - Project Lombok for boilerplate reduction
   - 5 passing tests (3 unit, 2 integration)
-  - Package refactored to com.supplier.diligence
+  - Package: com.supplier.diligence
+  - Full documentation (phase1_review.html + code walkthrough)
 
 - **Phase 2:** ⏳ Next
   - Document upload and file storage
