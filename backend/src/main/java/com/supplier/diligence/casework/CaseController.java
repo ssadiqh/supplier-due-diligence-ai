@@ -1,5 +1,6 @@
 package com.supplier.diligence.casework;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -11,13 +12,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/cases")
 @Validated
+@RequiredArgsConstructor
 public class CaseController {
 
     private final CaseService caseService;
-
-    public CaseController(CaseService caseService) {
-        this.caseService = caseService;
-    }
 
     @PostMapping
     public ResponseEntity<DueDiligenceCase> createCase(@Valid @RequestBody CreateCaseRequest request) {

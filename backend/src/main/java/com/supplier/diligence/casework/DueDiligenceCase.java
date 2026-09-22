@@ -1,11 +1,16 @@
 package com.supplier.diligence.casework;
 
 import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "cases")
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(exclude = {"createdAt", "updatedAt"})
+@ToString(exclude = {"createdAt", "updatedAt"})
 public class DueDiligenceCase {
 
     @Id
@@ -37,9 +42,6 @@ public class DueDiligenceCase {
     @Column
     private LocalDateTime updatedAt;
 
-    public DueDiligenceCase() {
-    }
-
     public DueDiligenceCase(String caseId, String supplierName, String requestedBy) {
         this.caseId = caseId;
         this.supplierName = supplierName;
@@ -47,69 +49,9 @@ public class DueDiligenceCase {
         this.createdAt = LocalDateTime.now();
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getCaseId() {
-        return caseId;
-    }
-
-    public void setCaseId(String caseId) {
-        this.caseId = caseId;
-    }
-
-    public String getSupplierName() {
-        return supplierName;
-    }
-
-    public void setSupplierName(String supplierName) {
-        this.supplierName = supplierName;
-    }
-
-    public CaseStatus getStatus() {
-        return status;
-    }
-
     public void setStatus(CaseStatus status) {
         this.status = status;
         this.updatedAt = LocalDateTime.now();
-    }
-
-    public String getSupplierAbn() {
-        return supplierAbn;
-    }
-
-    public void setSupplierAbn(String supplierAbn) {
-        this.supplierAbn = supplierAbn;
-    }
-
-    public String getSupplierLegalName() {
-        return supplierLegalName;
-    }
-
-    public void setSupplierLegalName(String supplierLegalName) {
-        this.supplierLegalName = supplierLegalName;
-    }
-
-    public String getRequestedBy() {
-        return requestedBy;
-    }
-
-    public void setRequestedBy(String requestedBy) {
-        this.requestedBy = requestedBy;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
 }

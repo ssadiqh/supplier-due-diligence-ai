@@ -1,18 +1,16 @@
 package com.supplier.diligence.casework;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class CaseService {
 
     private final CaseRepository caseRepository;
-
-    public CaseService(CaseRepository caseRepository) {
-        this.caseRepository = caseRepository;
-    }
 
     public DueDiligenceCase createCase(String supplierName, String requestedBy) {
         String caseId = "SUP-" + System.currentTimeMillis();
