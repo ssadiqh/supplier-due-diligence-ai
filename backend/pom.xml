@@ -20,7 +20,6 @@
 
     <properties>
         <java.version>20</java.version>
-        <spring-ai.version>1.0.0-M1</spring-ai.version>
     </properties>
 
     <dependencies>
@@ -55,15 +54,6 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-        </dependency>
-
-        <!-- Spring AI -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-bom</artifactId>
-            <version>${spring-ai.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
         </dependency>
 
         <!-- Testing -->
