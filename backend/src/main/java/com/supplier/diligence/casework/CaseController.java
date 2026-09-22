@@ -1,4 +1,4 @@
-package com.sadiq.diligence.casework;
+package com.supplier.diligence.casework;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.sadiq.diligence;
+package com.supplier.diligence;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

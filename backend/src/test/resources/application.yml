@@ -22,4 +22,4 @@ server:
 
 logging:
   level:
-    com.sadiq.diligence: DEBUG
+    com.supplier.diligence: DEBUG

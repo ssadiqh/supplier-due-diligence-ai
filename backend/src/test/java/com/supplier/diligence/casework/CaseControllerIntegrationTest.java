@@ -1,4 +1,4 @@
-package com.sadiq.diligence.casework;
+package com.supplier.diligence.casework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

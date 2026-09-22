@@ -1,4 +1,4 @@
-package com.sadiq.diligence.casework;
+package com.supplier.diligence.casework;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

@@ -30,4 +30,4 @@ server:
 logging:
   level:
     root: INFO
-    com.sadiq.diligence: DEBUG
+    com.supplier.diligence: DEBUG

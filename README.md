@@ -117,7 +117,7 @@ Tests use Testcontainers to spin up isolated PostgreSQL instances.
 backend/
   src/
     main/
-      java/com/sadiq/diligence/
+      java/com/supplier/diligence/
         casework/           # Case management
           CaseController.java
           CaseService.java
@@ -130,7 +130,7 @@ backend/
         application.yml     # App config
         db/migration/       # Flyway SQL migrations
     test/
-      java/com/sadiq/diligence/
+      java/com/supplier/diligence/
         casework/           # Tests
   pom.xml
 ```
