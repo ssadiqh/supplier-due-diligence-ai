@@ -1,0 +1,14 @@
+package com.sadiq.diligence.casework;
+
+public enum CaseStatus {
+    SUBMITTED,
+    DOCUMENT_UPLOADED,
+    EVIDENCE_EXTRACTED,
+    ENTITY_VERIFIED,
+    SANCTIONS_SCREENED,
+    RULES_EVALUATED,
+    POLICY_ASSESSED,
+    REVIEW_READY,
+    HUMAN_DECISION_PENDING,
+    COMPLETED
+}

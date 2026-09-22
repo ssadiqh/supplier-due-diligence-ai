@@ -1,83 +1,155 @@
-# Australian Supplier Onboarding and Counterparty Due-Diligence Assistant
+# Australian Supplier Due-Diligence AI
 
-A learning project demonstrating enterprise-grade AI architecture through a realistic Australian supplier-onboarding workflow.
+A learning-first implementation of an enterprise-grade AI system for Australian supplier onboarding and counterparty due-diligence.
 
-## Quick start
+## Phase 1: Case API & Persistence ✓
 
-### Prerequisites
+The foundation is now complete. You can create, retrieve, and manage supplier cases via REST API.
+
+### What's Implemented
+
+- **Spring Boot Application:** RESTful API for case management
+- **PostgreSQL Persistence:** Case entity with status workflow
+- **Flyway Migrations:** Database versioning and initialization
+- **Testcontainers Integration:** Isolated integration testing with real PostgreSQL
+- **Unit & Integration Tests:** Comprehensive test coverage
+
+### Quick Start
+
+#### Prerequisites
 - Java 21+
-- Maven 3.8+
-- Docker Desktop
-- Git
+- Maven 3.9+
+- Docker & Docker Compose
 
-### Local setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/supplier-due-diligence-ai.git
-cd supplier-due-diligence-ai
-```
-
-2. Copy environment template:
-```bash
-cp .env.example .env
-# Edit .env with your local settings
-```
-
-3. Start local services (PostgreSQL + pgvector):
+#### 1. Start PostgreSQL
 ```bash
 docker compose up -d
 ```
 
-4. Build the backend:
+#### 2. Build Backend
 ```bash
 cd backend
-mvn clean install
+mvn clean package
 ```
 
-5. Run the application:
+#### 3. Run Application
 ```bash
 mvn spring-boot:run
 ```
 
-The API will start at `http://localhost:8080`.
+The API runs on `http://localhost:8080`.
 
-## Project structure
+### API Endpoints
 
-- **backend/** - Spring Boot application, agents, rules, RAG
-- **sample-data/** - Synthetic supplier documents, policies, evaluation baselines
-- **docs/** - Architecture decisions, learning record
+#### Create Case
+```bash
+curl -X POST http://localhost:8080/api/cases \
+  -H "Content-Type: application/json" \
+  -d '{
+    "supplierName": "Acme Corporation",
+    "requestedBy": "analyst@company.com"
+  }'
+```
 
-## Architecture overview
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "caseId": "SUP-1234567890",
+  "supplierName": "Acme Corporation",
+  "status": "SUBMITTED",
+  "requestedBy": "analyst@company.com",
+  "createdAt": "2026-09-22T20:47:00"
+}
+```
 
-See [docs/LEARNING.md](docs/LEARNING.md) for design decisions, scope, and build order.
+#### Get All Cases
+```bash
+curl http://localhost:8080/api/cases
+```
 
-### Key principles
-- **Bounded agents**: Specialist AI components with typed input/output
-- **Deterministic rules**: Business logic outside the model
-- **Human authority**: Authorised reviewers make final decisions
-- **Evidence grounding**: All findings cite documents, tools, policies or rules
-- **Controlled tools**: Deny-by-default, schema-validated, case-scoped
+#### Get Case by ID
+```bash
+curl http://localhost:8080/api/cases/{id}
+```
 
-## Development
+#### Update Case Status
+```bash
+curl -X PATCH "http://localhost:8080/api/cases/{id}/status?status=DOCUMENT_UPLOADED"
+```
 
-Each vertical slice adds one capability without changing the core case model:
+### Case Status Workflow
 
-1. Case API, document upload, structured state
-2. Deterministic workflow and rules
-3. Document Evidence Agent
-4. ABN Lookup and Supplier Master tools
-5. MCP server and governance layer
-6. Policy RAG and retrieval
-7. Entity Resolution Agent
-8. Policy and Risk Agent
-9. Review Synthesis Agent
-10. Asynchronous events and human review
+```
+SUBMITTED
+  ↓
+DOCUMENT_UPLOADED
+  ↓
+EVIDENCE_EXTRACTED
+  ↓
+ENTITY_VERIFIED
+  ↓
+SANCTIONS_SCREENED
+  ↓
+RULES_EVALUATED
+  ↓
+POLICY_ASSESSED
+  ↓
+REVIEW_READY
+  ↓
+HUMAN_DECISION_PENDING
+  ↓
+COMPLETED
+```
 
-## Status
+### Running Tests
 
-**Release 1**: Learning implementation in progress.
+```bash
+cd backend
+mvn test
+```
 
-## License
+Tests use Testcontainers to spin up isolated PostgreSQL instances.
 
-Private learning project.
+### Architecture
+
+```
+backend/
+  src/
+    main/
+      java/com/sadiq/diligence/
+        casework/           # Case management
+          CaseController.java
+          CaseService.java
+          CaseRepository.java
+          DueDiligenceCase.java
+          CaseStatus.java
+        config/             # Spring config
+        SupplierDueDiligenceApplication.java
+      resources/
+        application.yml     # App config
+        db/migration/       # Flyway SQL migrations
+    test/
+      java/com/sadiq/diligence/
+        casework/           # Tests
+  pom.xml
+```
+
+### What's Next (Phase 2)
+
+- Document upload and storage
+- File type validation
+- Persisting case documents
+
+### Notes
+
+- **No AI yet.** Phase 1 focuses on REST/persistence patterns and the case model foundation.
+- **Tests are comprehensive.** Run `mvn test` to verify everything works.
+- **Database is PostgreSQL.** Local dev uses Docker; later phases will use Azure PostgreSQL.
+- **Flyway manages migrations.** Each schema change is versioned and tracked.
+
+---
+
+See [docs/Australian_Supplier_Due_Diligence_Agentic_AI.md](docs/Australian_Supplier_Due_Diligence_Agentic_AI.md) for the full project context and architecture decisions.
+
+See [docs/Project Context.md](docs/Project%20Context.md) for detailed scope and business context.

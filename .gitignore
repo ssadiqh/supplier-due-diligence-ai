@@ -5,61 +5,38 @@
 *.swo
 *~
 
-# Build
+# Build artifacts
 target/
-build/
-*.class
 *.jar
+*.war
 
 # Maven
-.m2/
-*.pom.xml.tag
-*.pom.xml.releaseBackup
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+pom.xml.versionsBackup
 
-# Gradle
-.gradle/
-*.gradle
-
-# Environment and secrets
+# Environment
 .env
 .env.local
 .env.*.local
-application-local.yml
-secrets.properties
-
-# Database and vector store
-pgdata/
-*.db
-*.sqlite
-
-# Documents and uploads
-uploads/
-documents/
-temp/
-
-# Logs
-logs/
-*.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Node/frontend (later)
-node_modules/
-dist/
-build/
+# Logs
+*.log
+logs/
 
-# Docker
-.dockerignore
-.project
-.settings/org.eclipse.core.resources.prefs
-.settings/org.eclipse.m2e.core.prefs
-backend/.classpath
-backend/.factorypath
-backend/.project
-backend/.settings/org.eclipse.core.resources.prefs
-backend/.settings/org.eclipse.jdt.apt.core.prefs
-backend/.settings/org.eclipse.jdt.core.prefs
-backend/.settings/org.eclipse.m2e.core.prefs
-backend/.settings/org.springframework.ide.eclipse.prefs
+# Temporary files
+tmp/
+scratch/
+
+# Database
+*.db
+*.sqlite
+
+# Documents (case evidence, uploaded files)
+uploads/
+evidence/
