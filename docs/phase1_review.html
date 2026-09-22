@@ -147,8 +147,7 @@
         </div>
 
         <h2>Project Structure</h2>
-        <div class="file-tree">
-supplier-due-diligence-ai/
+        <pre class="file-tree">supplier-due-diligence-ai/
 ├── backend/                          # Spring Boot application
 │   ├── src/
 │   │   ├── main/
@@ -158,10 +157,10 @@ supplier-due-diligence-ai/
 │   │   │   │   │   ├── CaseController.java      # REST endpoints
 │   │   │   │   │   ├── CaseService.java         # Business logic
 │   │   │   │   │   ├── CaseRepository.java      # Data access
-│   │   │   │   │   ├── DueDiligenceCase.java    # JPA entity
+│   │   │   │   │   ├── DueDiligenceCase.java    # JPA entity (with Lombok)
 │   │   │   │   │   ├── CaseStatus.java          # Status enum
 │   │   │   │   │   └── CreateCaseRequest.java   # Request DTO
-│   │   │   │   └── config/                      # Spring config (empty, for Phase 2+)
+│   │   │   │   └── config/                      # Spring config (for Phase 2+)
 │   │   │   ├── resources/
 │   │   │   │   ├── application.yml              # App configuration
 │   │   │   │   └── db/migration/
@@ -173,7 +172,7 @@ supplier-due-diligence-ai/
 │   │   │   │       └── CaseControllerIntegrationTest.java # API tests (2 tests)
 │   │   │   └── resources/
 │   │   │       └── application.yml              # Test config (H2 database)
-│   ├── pom.xml                       # Maven dependencies
+│   ├── pom.xml                       # Maven dependencies (Lombok, Spring Boot)
 │   └── Dockerfile                    # Container image definition
 ├── compose.yaml                      # Docker Compose for PostgreSQL
 ├── pom.xml                           # Root Maven POM
@@ -181,8 +180,9 @@ supplier-due-diligence-ai/
 ├── .gitignore                        # Git ignore rules
 ├── .env.example                      # Environment template
 └── docs/                             # Documentation
-    └── Project Context.md            # Full project brief
-        </div>
+    ├── phase1_review.html            # Detailed Phase 1 walkthrough
+    ├── IMPLEMENTATION_PLAN.md        # 10-phase roadmap
+    └── Project Context.md            # Full project brief</pre>
 
         <h2>Core Components Explained</h2>
 
