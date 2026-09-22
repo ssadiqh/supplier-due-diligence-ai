@@ -1,0 +1,54 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+target/
+build/
+*.class
+*.jar
+
+# Maven
+.m2/
+*.pom.xml.tag
+*.pom.xml.releaseBackup
+
+# Gradle
+.gradle/
+*.gradle
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+application-local.yml
+secrets.properties
+
+# Database and vector store
+pgdata/
+*.db
+*.sqlite
+
+# Documents and uploads
+uploads/
+documents/
+temp/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node/frontend (later)
+node_modules/
+dist/
+build/
+
+# Docker
+.dockerignore
