@@ -2,15 +2,18 @@ package com.diligence.casework;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.diligence.documents.Document;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "cases")
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"createdAt", "updatedAt"})
-@ToString(exclude = {"createdAt", "updatedAt"})
+@EqualsAndHashCode(exclude = {"createdAt", "updatedAt", "documents"})
+@ToString(exclude = {"createdAt", "updatedAt", "documents"})
 public class DueDiligenceCase {
 
     @Id
@@ -38,6 +41,9 @@ public class DueDiligenceCase {
 
     @Column
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents = new ArrayList<>();
 
     public DueDiligenceCase(String supplierName, String requestedBy) {
         this.supplierName = supplierName;
