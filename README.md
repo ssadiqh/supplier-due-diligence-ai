@@ -27,9 +27,9 @@ The foundation is now complete. You can create, retrieve, and manage supplier ca
 docker compose up -d
 ```
 
-#### 2. Build Backend
+#### 2. Build Casework Service
 ```bash
-cd backend
+cd casework-service
 mvn clean package
 ```
 
@@ -117,23 +117,22 @@ Tests use Testcontainers to spin up isolated PostgreSQL instances.
 ### Architecture
 
 ```
-backend/
+casework-service/
   src/
     main/
-      java/com/supplier/diligence/
+      java/com/diligence/
         casework/           # Case management
           CaseController.java
           CaseService.java
           CaseRepository.java
           DueDiligenceCase.java
           CaseStatus.java
-        config/             # Spring config
         SupplierDueDiligenceApplication.java
       resources/
         application.yml     # App config
         db/migration/       # Flyway SQL migrations
     test/
-      java/com/supplier/diligence/
+      java/com/diligence/
         casework/           # Tests
   pom.xml
 ```

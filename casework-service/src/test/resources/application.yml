@@ -20,6 +20,11 @@ spring:
 server:
   port: 0
 
+app:
+  upload:
+    dir: ./data/test-documents
+    max-file-size: 10MB
+
 logging:
   level:
-    com.supplier.diligence: DEBUG
+    com.diligence: DEBUG

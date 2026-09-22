@@ -1,4 +1,4 @@
-package com.supplier.diligence.casework;
+package com.diligence.casework;
 
 import jakarta.persistence.*;
 import lombok.*;

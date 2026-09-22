@@ -1,4 +1,4 @@
-package com.supplier.diligence.casework;
+package com.diligence.casework;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

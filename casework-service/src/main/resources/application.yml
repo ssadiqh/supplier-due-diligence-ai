@@ -27,7 +27,12 @@ server:
   servlet:
     context-path: /
 
+app:
+  upload:
+    dir: ./data/case-documents
+    max-file-size: 10MB
+
 logging:
   level:
     root: INFO
-    com.supplier.diligence: DEBUG
+    com.diligence: DEBUG

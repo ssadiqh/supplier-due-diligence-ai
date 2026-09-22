@@ -86,8 +86,8 @@ Phased learning-first approach starting with REST API, progressing through tools
 ## Folder Structure
 
 ```
-backend/
-  src/main/java/com/supplier/diligence/
+casework-service/
+  src/main/java/com/diligence/
     casework/       # Case management (Phase 1-2)
     documents/      # Upload, parsing (Phase 2, 5)
     rules/          # Deterministic rules (Phase 3)
@@ -100,6 +100,8 @@ backend/
   src/main/resources/
     db/migration/   # Flyway schemas (evolving)
     prompts/        # Versioned agent skills
+data/
+  case-documents/   # Uploaded case documents
 sample-data/
   documents/        # Test PDFs
   policies/         # Policy corpus

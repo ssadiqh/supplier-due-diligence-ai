@@ -1,4 +1,4 @@
-package com.supplier.diligence.casework;
+package com.diligence.casework;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
