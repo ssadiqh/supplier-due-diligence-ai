@@ -17,7 +17,7 @@ The foundation is now complete. You can create, retrieve, and manage supplier ca
 ### Quick Start
 
 #### Prerequisites
-- Java 21+
+- Java 20
 - Maven 3.9+
 - Docker & Docker Compose
 
