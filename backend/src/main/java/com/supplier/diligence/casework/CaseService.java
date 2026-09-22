@@ -13,17 +13,12 @@ public class CaseService {
     private final CaseRepository caseRepository;
 
     public DueDiligenceCase createCase(String supplierName, String requestedBy) {
-        String caseId = "SUP-" + System.currentTimeMillis();
-        DueDiligenceCase dueDiligenceCase = new DueDiligenceCase(caseId, supplierName, requestedBy);
+        DueDiligenceCase dueDiligenceCase = new DueDiligenceCase(supplierName, requestedBy);
         return caseRepository.save(dueDiligenceCase);
     }
 
     public Optional<DueDiligenceCase> getCaseById(UUID id) {
         return caseRepository.findById(id);
-    }
-
-    public Optional<DueDiligenceCase> getCaseByCaseId(String caseId) {
-        return caseRepository.findByCaseId(caseId);
     }
 
     public List<DueDiligenceCase> getAllCases() {

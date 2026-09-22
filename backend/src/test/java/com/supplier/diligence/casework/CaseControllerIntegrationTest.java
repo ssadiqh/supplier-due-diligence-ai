@@ -34,7 +34,7 @@ class CaseControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.supplierName").value("Acme Corp"))
                 .andExpect(jsonPath("$.status").value("SUBMITTED"))
-                .andExpect(jsonPath("$.caseId").isNotEmpty());
+                .andExpect(jsonPath("$.id").isNotEmpty());
     }
 
     @Test

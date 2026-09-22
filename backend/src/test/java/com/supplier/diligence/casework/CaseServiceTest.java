@@ -30,9 +30,9 @@ class CaseServiceTest {
     @Test
     @DisplayName("Should create a new case with SUBMITTED status")
     void testCreateCase() {
-        DueDiligenceCase mockCase = new DueDiligenceCase("SUP-001", "Test Supplier", "analyst@example.com");
+        DueDiligenceCase mockCase = new DueDiligenceCase("Test Supplier", "analyst@example.com");
         mockCase.setId(UUID.randomUUID());
-        
+
         when(caseRepository.save(any())).thenReturn(mockCase);
 
         DueDiligenceCase created = caseService.createCase("Test Supplier", "analyst@example.com");
@@ -46,13 +46,13 @@ class CaseServiceTest {
     @Test
     @DisplayName("Should retrieve case by ID")
     void testGetCaseById() {
-        UUID caseId = UUID.randomUUID();
-        DueDiligenceCase mockCase = new DueDiligenceCase("SUP-001", "Test Supplier", "analyst@example.com");
-        mockCase.setId(caseId);
-        
-        when(caseRepository.findById(caseId)).thenReturn(Optional.of(mockCase));
+        UUID id = UUID.randomUUID();
+        DueDiligenceCase mockCase = new DueDiligenceCase("Test Supplier", "analyst@example.com");
+        mockCase.setId(id);
 
-        Optional<DueDiligenceCase> retrieved = caseService.getCaseById(caseId);
+        when(caseRepository.findById(id)).thenReturn(Optional.of(mockCase));
+
+        Optional<DueDiligenceCase> retrieved = caseService.getCaseById(id);
 
         assertTrue(retrieved.isPresent());
         assertEquals("Test Supplier", retrieved.get().getSupplierName());
@@ -61,14 +61,14 @@ class CaseServiceTest {
     @Test
     @DisplayName("Should update case status")
     void testUpdateCaseStatus() {
-        UUID caseId = UUID.randomUUID();
-        DueDiligenceCase mockCase = new DueDiligenceCase("SUP-001", "Test Supplier", "analyst@example.com");
-        mockCase.setId(caseId);
-        
-        when(caseRepository.findById(caseId)).thenReturn(Optional.of(mockCase));
+        UUID id = UUID.randomUUID();
+        DueDiligenceCase mockCase = new DueDiligenceCase("Test Supplier", "analyst@example.com");
+        mockCase.setId(id);
+
+        when(caseRepository.findById(id)).thenReturn(Optional.of(mockCase));
         when(caseRepository.save(any())).thenReturn(mockCase);
 
-        DueDiligenceCase updated = caseService.updateCaseStatus(caseId, CaseStatus.DOCUMENT_UPLOADED);
+        DueDiligenceCase updated = caseService.updateCaseStatus(id, CaseStatus.DOCUMENT_UPLOADED);
 
         assertNotNull(updated);
         assertEquals(CaseStatus.DOCUMENT_UPLOADED, updated.getStatus());

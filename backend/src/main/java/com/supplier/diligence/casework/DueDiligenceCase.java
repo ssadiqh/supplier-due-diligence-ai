@@ -17,9 +17,6 @@ public class DueDiligenceCase {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String caseId;
-
     @Column(nullable = false)
     private String supplierName;
 
@@ -42,8 +39,7 @@ public class DueDiligenceCase {
     @Column
     private LocalDateTime updatedAt;
 
-    public DueDiligenceCase(String caseId, String supplierName, String requestedBy) {
-        this.caseId = caseId;
+    public DueDiligenceCase(String supplierName, String requestedBy) {
         this.supplierName = supplierName;
         this.requestedBy = requestedBy;
         this.createdAt = LocalDateTime.now();
