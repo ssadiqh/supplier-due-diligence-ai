@@ -26,11 +26,12 @@ Phased learning-first approach starting with REST API, progressing through tools
 - **Learning:** Separation of concerns (AI vs deterministic), authority boundaries
 - **Status:** 6 tests passing (4 unit, 6 integration), committed to repository
 
-### Phase 4: ABN Lookup & First Tool (4 days)
+### Phase 4: ABN Lookup & First Tool (4 days) ✅ COMPLETE
 - **Goal:** Integrate real external API (ABN Lookup), validate supplier identity
 - **Tech:** HTTP client, API error handling, supplier verification
 - **Deliverable:** ABN validation, name matching, mismatch detection
 - **Learning:** External APIs, tool calling patterns, timeouts and retries
+- **Status:** 6 tests passing (3 unit, 3 integration), committed to repository
 
 ### Phase 5: Document Evidence Agent (5-7 days)
 - **Goal:** Use Spring AI to extract structured facts from PDFs
@@ -159,10 +160,18 @@ docs/               # Architecture, decisions
   - Database migration (V3__Create_rules_tables.sql)
   - Package: com.diligence.rules
 
-- **Phase 4:** ⏳ Next
-  - External API integration (ABN Lookup)
-  - Tool calling patterns
-  - Supplier identity validation
+- **Phase 4:** ✅ Complete & Tested
+  - ABN Lookup Service with HTTP client integration
+  - Supplier Verification Service with fuzzy name matching (Levenshtein distance)
+  - Tool Result entity and repository with CASCADE DELETE
+  - REST endpoints (POST verify supplier, GET tool results with filtering)
+  - External API error handling with configurable timeout and retries
+  - Evidence tracking with JSON serialization of tool input/output
+  - RestTemplate configuration with 5-second timeouts
+  - Database migration (V4__Create_tool_results_table.sql) with indices
+  - 6 passing tests (3 unit, 3 integration) — 26/26 total test suite passing
+  - Package: com.diligence.tools
+  - Configuration: application.yml with ABN lookup settings
 
 ---
 
