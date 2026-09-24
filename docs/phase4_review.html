@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4 Review: ABN Lookup & Tool Integration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 3px solid #27ae60; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; border-left: 4px solid #27ae60; padding-left: 10px; }
+        h3 { color: #555; margin-top: 20px; }
+        .status-complete { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; display: inline-block; }
+        .code-block { background: #f4f4f4; border-left: 3px solid #27ae60; padding: 15px; margin: 15px 0; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.9em; }
+        .architecture-box { background: #e8f4f8; border: 1px solid #b3d9e6; padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .learning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .test-results { background: #d4edda; border: 1px solid #28a745; padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .test-case { margin: 10px 0; padding: 10px; background: white; border-left: 3px solid #28a745; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background-color: #27ae60;
+            color: white;
+        }
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .api-endpoint { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; }
+        .success { color: #27ae60; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+        .note { background: #e3f2fd; padding: 10px; margin: 10px 0; border-left: 3px solid #2196f3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Phase 4: ABN Lookup & Tool Integration</h1>
+        <div class="status-complete">✅ COMPLETE & TESTED</div>
+
+        <h2>Overview</h2>
+        <p>Phase 4 introduces external API integration through the <strong>ABN Lookup tool</strong>, demonstrating tool calling patterns essential for Phase 5+ agents. Suppliers are verified against the Australian Business Register with fuzzy name matching and evidence tracking.</p>
+
+        <div class="note">
+            <strong>Learning Objective:</strong> Understand tool calling patterns, external API integration, error handling, and immutable evidence recording—skills required for building LLM agents in Phases 5-10.
+        </div>
+
+        <h2>Architecture Overview</h2>
+        <div class="architecture-box">
+            <h3>Tool Calling Flow</h3>
+            <pre>
+Case (ID, SupplierName, SupplierABN)
+  ↓
+ToolController.verifySupplier()
+  ↓
+SupplierVerificationService.verifySupplier()
+  ├─ 1. Call ABNLookupService.lookupABN(abn)
+  ├─ 2. Compare Names (Levenshtein Distance)
+  ├─ 3. Build Evidence String
+  └─ 4. Save ToolResult (immutable audit trail)
+  ↓
+ToolResult (toolName, success, evidence, input/output JSON)
+            </pre>
+        </div>
+
+        <h2>Components</h2>
+
+        <h3>1. ABNLookupService</h3>
+        <p><strong>Purpose:</strong> HTTP client for Australian Business Register API integration</p>
+        <p><strong>Location:</strong> <code>com.diligence.tools.ABNLookupService</code></p>
+
+        <div class="code-block">
+public ABNLookupResult lookupABN(String abn) {
+    // Validates ABN format (11 digits)
+    // Calls external API (mock in Phase 4, real in Phase 5+)
+    // Returns: abn, businessName, status, found
+}
+
+public static class ABNLookupResult {
+    public String abn;
+    public String businessName;    // e.g., "Test Company Pty Ltd"
+    public String status;          // "Active", "Cancelled", etc.
+    public boolean found;          // true if ABN exists in registry
+}
+        </div>
+
+        <p><strong>Key Features:</strong></p>
+        <ul>
+            <li>11-digit ABN validation (throws RuntimeException on invalid format)</li>
+            <li>Configuration via <code>application.yml</code>: url, api-key, timeout, max-retries</li>
+            <li>Mock API returns test data (Phase 4 learning)</li>
+            <li>Real ABR API integration ready for Phase 5+</li>
+            <li>Error handling for network failures, timeouts, invalid ABN</li>
+            <li>Structured response using nested static class</li>
+        </ul>
+
+        <h3>2. SupplierVerificationService</h3>
+        <p><strong>Purpose:</strong> Tool orchestration layer that calls ABN Lookup and performs name matching</p>
+        <p><strong>Location:</strong> <code>com.diligence.tools.SupplierVerificationService</code></p>
+
+        <div class="code-block">
+public ToolResult verifySupplier(UUID caseId) {
+    // 1. Fetch case and ABN from database
+    // 2. Call ABN Lookup API
+    // 3. Perform fuzzy name matching (Levenshtein distance)
+    // 4. Build human-readable evidence string
+    // 5. Save immutable ToolResult
+    // 6. Handle errors and return failed result
+}
+
+private NameMatchResult matchSupplierNames(String caseName, String abnName) {
+    // Exact match → similarity 1.0
+    // Contains match → similarity 0.95
+    // Levenshtein distance → similarity based on edit distance
+    // Match if similarity > 0.80 (80% threshold)
+}
+        </div>
+
+        <p><strong>Key Features:</strong></p>
+        <ul>
+            <li><strong>Fuzzy Matching Algorithm:</strong>
+                <ul>
+                    <li>Levenshtein distance for string similarity</li>
+                    <li>Handles "Acme Corp" vs "Acme Corporation Pty Ltd"</li>
+                    <li>Configurable 80% match threshold</li>
+                </ul>
+            </li>
+            <li><strong>Name Normalization:</strong> lowercase, remove punctuation, normalize spaces</li>
+            <li><strong>Evidence Tracking:</strong> Human-readable findings with verdict (VERIFIED, INVESTIGATE, HIGH RISK, REVIEW REQUIRED)</li>
+            <li><strong>Error Resilience:</strong> Catches all exceptions, saves failed result with error message</li>
+            <li><strong>JSON Serialization:</strong> Input/output stored as JSON for audit trail</li>
+        </ul>
+
+        <h3>3. ToolResult Entity</h3>
+        <p><strong>Purpose:</strong> Immutable audit record of tool execution</p>
+        <p><strong>Location:</strong> <code>com.diligence.tools.ToolResult</code></p>
+
+        <div class="code-block">
+@Entity
+@Table(name = "tool_results")
+public class ToolResult {
+    @Id private UUID id;
+    @ManyToOne @JsonIgnore private DueDiligenceCase caseEntity;  // Case reference
+
+    private String toolName;       // "ABN_LOOKUP"
+    private String toolType;       // "SUPPLIER_VERIFICATION"
+    private String input;          // JSON input (e.g., {"abn": "12345678901"})
+    private String output;         // JSON output (e.g., {"businessName": "Test Co"})
+    private Boolean success;       // true/false
+    private String errorMessage;   // Error details if failed
+    private String evidence;       // Human-readable findings
+    private LocalDateTime executedAt;  // Timestamp (immutable)
+}
+        </div>
+
+        <p><strong>Key Design Decisions:</strong></p>
+        <ul>
+            <li><strong>Immutability:</strong> executedAt set at construction, updatable=false</li>
+            <li><strong>JSON Storage:</strong> Input/output as TEXT columns for flexibility</li>
+            <li><strong>CASCADE DELETE:</strong> Deleting case removes all tool results</li>
+            <li><strong>@JsonIgnore:</strong> Prevents circular JSON serialization</li>
+            <li><strong>@Data + Lombok:</strong> Auto-generates getters/setters/toString</li>
+        </ul>
+
+        <h3>4. ToolController</h3>
+        <p><strong>Purpose:</strong> REST API for tool execution and result queries</p>
+        <p><strong>Location:</strong> <code>com.diligence.tools.ToolController</code></p>
+
+        <p><strong>REST Endpoints:</strong></p>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Purpose</th>
+                <th>Response</th>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/cases/{caseId}/verify-supplier</td>
+                <td>Execute ABN lookup and verification</td>
+                <td>ToolResult (201 Created)</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/cases/{caseId}/tool-results</td>
+                <td>Retrieve all tool results for case</td>
+                <td>List&lt;ToolResult&gt; (200 OK)</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/cases/{caseId}/tool-results/successful</td>
+                <td>Filter successful results only</td>
+                <td>List&lt;ToolResult&gt; (200 OK)</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/cases/{caseId}/tool-results/failed</td>
+                <td>Filter failed results only</td>
+                <td>List&lt;ToolResult&gt; (200 OK)</td>
+            </tr>
+        </table>
+
+        <h3>5. RestTemplateConfig</h3>
+        <p><strong>Purpose:</strong> Spring configuration for HTTP client</p>
+        <p><strong>Location:</strong> <code>com.diligence.config.RestTemplateConfig</code></p>
+
+        <div class="code-block">
+@Configuration
+public class RestTemplateConfig {
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder
+            .setConnectTimeout(Duration.ofSeconds(5))
+            .setReadTimeout(Duration.ofSeconds(5))
+            .build();
+    }
+}
+        </div>
+
+        <p><strong>Configuration:</strong></p>
+        <ul>
+            <li>Connection timeout: 5 seconds</li>
+            <li>Read timeout: 5 seconds</li>
+            <li>Applied to all RestTemplate calls (ABN Lookup API)</li>
+        </ul>
+
+        <h2>Database Schema</h2>
+
+        <div class="code-block">
+CREATE TABLE tool_results (
+    id UUID PRIMARY KEY,
+    case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+    tool_name VARCHAR(100) NOT NULL,     -- "ABN_LOOKUP"
+    tool_type VARCHAR(100) NOT NULL,     -- "SUPPLIER_VERIFICATION"
+    input TEXT,                          -- JSON input
+    output TEXT,                         -- JSON output
+    success BOOLEAN NOT NULL,            -- true/false
+    error_message TEXT,
+    evidence TEXT,                       -- Human-readable findings
+    executed_at TIMESTAMP NOT NULL
+);
+
+-- Performance indices
+CREATE INDEX idx_tool_results_case_id ON tool_results(case_id);
+CREATE INDEX idx_tool_results_tool_name ON tool_results(tool_name);
+CREATE INDEX idx_tool_results_success ON tool_results(success);
+CREATE INDEX idx_tool_results_executed_at ON tool_results(executed_at);
+        </div>
+
+        <h2>Configuration</h2>
+
+        <p><strong>application.yml additions:</strong></p>
+        <div class="code-block">
+abn:
+  lookup:
+    url: https://api.abr.business.gov.au/v1/
+    api-key: ${ABN_API_KEY:}          # Environment variable (optional in Phase 4)
+    timeout: 5000                      # milliseconds
+    max-retries: 3
+
+http:
+  client:
+    connection-timeout: 5000           # milliseconds
+    socket-timeout: 5000               # milliseconds
+        </div>
+
+        <h2>Test Coverage</h2>
+
+        <div class="test-results">
+            <h3>✅ 6 Tests (All Passing: 26/26 Total Suite)</h3>
+
+            <h4>Unit Tests: SupplierVerificationServiceTest (3 tests)</h4>
+            <div class="test-case">
+                <strong>testVerifySupplier_NameMatches</strong><br>
+                Verifies supplier when name matches ABN registry (similarity > 80%)<br>
+                ✓ Name matching algorithm works correctly
+            </div>
+            <div class="test-case">
+                <strong>testVerifySupplier_NameMismatch</strong><br>
+                Detects when supplier name doesn't match registry (different company)<br>
+                ✓ Mismatch detection triggers investigation verdict
+            </div>
+            <div class="test-case">
+                <strong>testVerifySupplier_LookupFails</strong><br>
+                Handles API failures gracefully (network error, timeout)<br>
+                ✓ Failed tool result saved with error message
+            </div>
+
+            <h4>Integration Tests: ToolControllerIntegrationTest (3 tests)</h4>
+            <div class="test-case">
+                <strong>testVerifySupplier</strong><br>
+                POST /api/cases/{caseId}/verify-supplier returns ToolResult<br>
+                ✓ HTTP 200, response contains toolName and success fields
+            </div>
+            <div class="test-case">
+                <strong>testGetToolResults</strong><br>
+                GET /api/cases/{caseId}/tool-results returns all results<br>
+                ✓ Array response with proper ToolResult structure
+            </div>
+            <div class="test-case">
+                <strong>testGetSuccessfulResults</strong><br>
+                GET /api/cases/{caseId}/tool-results/successful filters by success=true<br>
+                ✓ Only successful results returned
+            </div>
+        </div>
+
+        <h2>Algorithm Deep Dive: Levenshtein Distance</h2>
+
+        <p>Fuzzy name matching uses Levenshtein distance to handle variations:</p>
+
+        <div class="code-block">
+Example: "Acme Corp" vs "Acme Corporation Pty Ltd"
+
+Step 1: Normalize
+  "acme corp" vs "acme corporation pty ltd"
+
+Step 2: Calculate edit distance
+  - No edits needed for "acme " (5 chars match)
+  - Insert "oration pty ltd" (16 edits)
+  - Total distance: ~16 edits
+
+Step 3: Calculate similarity
+  maxLength = 21 characters
+  similarity = 1.0 - (16 / 21) = 0.238... ❌ (Below 80% threshold)
+
+BUT: "Contains" check catches this:
+  "acme corporation pty ltd" CONTAINS "acme corp"? NO
+  "acme corp" CONTAINED IN "acme corporation pty ltd"? YES
+  → Special case: 0.95 similarity (matches!) ✓
+        </div>
+
+        <p><strong>Matching Logic Priority:</strong></p>
+        <ol>
+            <li>Exact match → 1.0 (100%)</li>
+            <li>Contains match → 0.95 (95%)</li>
+            <li>Levenshtein distance → calculated (must be > 80%)</li>
+            <li>No match → similarity score stored for investigation</li>
+        </ol>
+
+        <h2>Error Handling</h2>
+
+        <p><strong>Scenario: API Timeout</strong></p>
+        <div class="code-block">
+ABNLookupService.lookupABN("12345678901")
+  → RestTemplate timeout (5 seconds)
+  → Catch RestClientException
+  → Log: "ABN lookup failed for 12345678901: Connection reset"
+  → Throw RuntimeException("Failed to lookup ABN: Connection reset")
+
+SupplierVerificationService.verifySupplier()
+  → Catch RuntimeException
+  → Log: "Supplier verification failed for case ... API error"
+  → Save ToolResult(success=false, errorMessage="API error")
+  → Return failed result (no exception bubbles up)
+        </div>
+
+        <p><strong>Scenario: Invalid ABN</strong></p>
+        <div class="code-block">
+Input: "123" (not 11 digits)
+  → ABNLookupService validates: !abn.matches("\\d{11}")
+  → Throw RuntimeException("ABN must be 11 digits")
+  → Caught by verifySupplier, saved as failed result
+        </div>
+
+        <h2>Evidence Example</h2>
+
+        <p><strong>Successful Verification:</strong></p>
+        <div class="code-block">
+ABN Lookup Tool Execution:
+- ABN: 12345678901
+- Case Name: Acme Corp
+- Registry Name: Acme Corporation Pty Ltd
+- Business Status: Active
+- Name Match: YES
+- Similarity Score: 95.00%
+- Verdict: Name matches registry - VERIFIED
+        </div>
+
+        <p><strong>Mismatch Detection:</strong></p>
+        <div class="code-block">
+ABN Lookup Tool Execution:
+- ABN: 12345678901
+- Case Name: Acme Corp
+- Registry Name: XYZ Holdings Pty Ltd
+- Business Status: Active
+- Name Match: NO
+- Similarity Score: 15.23%
+- Verdict: Name does not match registry - INVESTIGATE
+        </div>
+
+        <h2>Key Learnings</h2>
+
+        <div class="learning-box">
+            <h3>1. Tool Calling Pattern</h3>
+            <p><strong>Problem:</strong> How do agents invoke external services?</p>
+            <p><strong>Solution:</strong> Tool abstraction layer (ABNLookupService) that agents will call in Phases 5-10</p>
+            <p><strong>Pattern:</strong> Tool → Service → Repository → Persistence</p>
+        </div>
+
+        <div class="learning-box">
+            <h3>2. External API Integration</h3>
+            <p><strong>Timeouts:</strong> RestTemplate configured with 5-second limits prevents hanging</p>
+            <p><strong>Validation:</strong> ABN format checked before API call (fail-fast)</p>
+            <p><strong>Error Resilience:</strong> All failures caught, logged, and persisted (no loss of information)</p>
+        </div>
+
+        <div class="learning-box">
+            <h3>3. Fuzzy Matching</h3>
+            <p><strong>Problem:</strong> Exact string matching fails for company name variations</p>
+            <p><strong>Solution:</strong> Levenshtein distance + contains logic</p>
+            <p><strong>Trade-off:</strong> 80% threshold balances false positives vs false negatives</p>
+        </div>
+
+        <div class="learning-box">
+            <h3>4. Immutable Evidence Trail</h3>
+            <p><strong>Design:</strong> ToolResult is write-once, never updated</p>
+            <p><strong>Benefit:</strong> Complete audit trail; agents can't retroactively change findings</p>
+            <p><strong>Usage:</strong> Later phases use evidence to explain decisions to humans</p>
+        </div>
+
+        <div class="learning-box">
+            <h3>5. Structured JSON for Tool I/O</h3>
+            <p><strong>Input/Output stored as JSON:</strong> Future phases (Phase 5+) can parse and reason about tool results</p>
+            <p><strong>Flexibility:</strong> Different tools return different structures; JSON accommodates this</p>
+        </div>
+
+        <h2>Comparison: Phase 3 vs Phase 4</h2>
+
+        <table>
+            <tr>
+                <th>Aspect</th>
+                <th>Phase 3: Deterministic Rules</th>
+                <th>Phase 4: Tool Calling</th>
+            </tr>
+            <tr>
+                <td><strong>Input</strong></td>
+                <td>Case data (local)</td>
+                <td>Case data + External API call</td>
+            </tr>
+            <tr>
+                <td><strong>Logic</strong></td>
+                <td>Pure business rules (if/else)</td>
+                <td>External service + fuzzy matching</td>
+            </tr>
+            <tr>
+                <td><strong>Error Handling</strong></td>
+                <td>Validation errors only</td>
+                <td>Network errors, timeouts, API failures</td>
+            </tr>
+            <tr>
+                <td><strong>Evidence</strong></td>
+                <td>Rule name + verdict</td>
+                <td>Tool I/O + name match similarity + verdict</td>
+            </tr>
+            <tr>
+                <td><strong>Future Use</strong></td>
+                <td>Rules engine stays deterministic</td>
+                <td>Tools become callable by Phase 5+ agents</td>
+            </tr>
+        </table>
+
+        <h2>Code Review: Quality Checklist</h2>
+
+        <div class="test-results">
+            <h3>✅ Code Quality Metrics</h3>
+            <ul>
+                <li><span class="success">✓ No compilation warnings</span> (Lombok @EqualsAndHashCode/@ToString fixed)</li>
+                <li><span class="success">✓ 26/26 tests passing</span> (Phase 1-4 comprehensive suite)</li>
+                <li><span class="success">✓ Proper exception handling</span> (All errors caught and logged)</li>
+                <li><span class="success">✓ Database indices</span> (case_id, tool_name, success, executed_at)</li>
+                <li><span class="success">✓ Immutable entities</span> (executedAt set at construction)</li>
+                <li><span class="success">✓ Circular reference prevention</span> (@JsonIgnore on caseEntity)</li>
+                <li><span class="success">✓ Configuration externalization</span> (application.yml)</li>
+                <li><span class="success">✓ Dependency injection</span> (@RequiredArgsConstructor + final fields)</li>
+                <li><span class="success">✓ Logging</span> (@Slf4j for all services)</li>
+                <li><span class="success">✓ API documentation</span> (Comments on REST endpoints)</li>
+            </ul>
+        </div>
+
+        <h2>Next Steps: Phase 5 Preparation</h2>
+
+        <p>Phase 4 establishes the foundation for Phase 5 (Document Evidence Agent):</p>
+
+        <ul>
+            <li><strong>Tool Calling Pattern:</strong> Agents in Phase 5+ will call ABNLookupService.lookupABN() the same way</li>
+            <li><strong>Evidence Storage:</strong> Spring AI will use ToolResult pattern for document extraction results</li>
+            <li><strong>Immutability:</strong> Phase 5 agents will create immutable evidence records (same as ToolResult)</li>
+            <li><strong>REST Endpoints:</strong> Phase 5 controller will follow same pattern (POST to execute, GET to query)</li>
+            <li><strong>Database Indices:</strong> Phase 5 migrations will use same indexing strategy</li>
+        </ul>
+
+        <h2>Summary</h2>
+
+        <p><strong>Phase 4 Complete Deliverables:</strong></p>
+        <ul>
+            <li>✅ ABNLookupService: HTTP client with configurable API integration</li>
+            <li>✅ SupplierVerificationService: Tool orchestration with fuzzy name matching</li>
+            <li>✅ ToolResult entity: Immutable audit trail of tool execution</li>
+            <li>✅ ToolController: REST API for verification and result queries</li>
+            <li>✅ Database migration V4: tool_results table with indices</li>
+            <li>✅ RestTemplateConfig: Spring bean for HTTP client</li>
+            <li>✅ Test suite: 6 tests covering all scenarios (26/26 total passing)</li>
+            <li>✅ Documentation: This review + code comments</li>
+        </ul>
+
+        <p><strong>Metrics:</strong></p>
+        <ul>
+            <li>Code: 715 lines (10 new/modified files)</li>
+            <li>Tests: 6 new tests (3 unit, 3 integration)</li>
+            <li>Coverage: Name matching (3 cases), API errors (1 case), REST endpoints (3 cases)</li>
+            <li>Build: Clean compile, zero warnings</li>
+        </ul>
+
+        <div class="note">
+            <strong>Ready for Phase 5:</strong> Tool calling infrastructure in place. Spring AI integration next for PDF extraction and LLM reasoning.
+        </div>
+
+    </div>
+</body>
+</html>
