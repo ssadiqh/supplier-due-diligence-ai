@@ -3,6 +3,7 @@ package com.diligence.casework;
 import jakarta.persistence.*;
 import lombok.*;
 import com.diligence.documents.Document;
+import com.diligence.rules.RuleResult;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +13,8 @@ import java.util.UUID;
 @Table(name = "cases")
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"createdAt", "updatedAt", "documents"})
-@ToString(exclude = {"createdAt", "updatedAt", "documents"})
+@EqualsAndHashCode(exclude = {"createdAt", "updatedAt", "documents", "ruleResults"})
+@ToString(exclude = {"createdAt", "updatedAt", "documents", "ruleResults"})
 public class DueDiligenceCase {
 
     @Id
@@ -44,6 +45,9 @@ public class DueDiligenceCase {
 
     @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RuleResult> ruleResults = new ArrayList<>();
 
     public DueDiligenceCase(String supplierName, String requestedBy) {
         this.supplierName = supplierName;
