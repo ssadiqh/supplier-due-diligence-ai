@@ -60,10 +60,3 @@ public class RuleController {
         return ResponseEntity.ok(results);
     }
 }
-
-record CreateRuleRequest(
-    String name,
-    String description,
-    RuleType ruleType,
-    RuleSeverity severity
-) {}

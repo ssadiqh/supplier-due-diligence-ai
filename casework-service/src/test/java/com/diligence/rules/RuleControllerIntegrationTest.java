@@ -117,10 +117,3 @@ class RuleControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].rule.name").value("Test Rule"));
     }
 }
-
-record CreateRuleRequest(
-    String name,
-    String description,
-    RuleType ruleType,
-    RuleSeverity severity
-) {}
