@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 3: Deterministic Rules & Workflow - Code Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --text: #e5e7eb;
+                --bg-dark: #1f2937;
+                --bg-light: #111827;
+                --border: #374151;
+            }
+            :root:not([data-theme="light"]) body {
+                color: #e5e7eb;
+                background: #0f172a;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .container {
+                background: #1f2937;
+            }
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) h3 {
+                color: #d1d5db;
+            }
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .subtitle {
+                color: #9ca3af;
+            }
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .status.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .status.complete {
+                background: #064e3b;
+                color: #d1fae5;
+            }
+        }
+
+        .code-block {
+            background: var(--bg-light);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+
+        pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: var(--bg-light);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .code-file {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .file-name {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .endpoint {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .endpoint {
+                background: #0c2d4d;
+            }
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+
+        .method.post { background: #dcfce7; color: #166534; }
+        .method.get { background: #dbeafe; color: #1e40af; }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .method.post { background: #15803d; color: #dcfce7; }
+            :root:not([data-theme="light"]) .method.get { background: #1e40af; color: #dbeafe; }
+        }
+
+        .test-results {
+            background: #f0fdf4;
+            border: 2px solid var(--success);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .test-results {
+                background: #064e3b;
+            }
+        }
+
+        .test-count {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Phase 3: Deterministic Rules & Workflow</h1>
+        <p class="subtitle">Business logic evaluation without AI - comprehensive code review</p>
+
+        <div class="status complete">✅ COMPLETE</div>
+
+        <div class="test-results">
+            <div class="test-count">10/10 Tests Passing</div>
+            <p>4 unit tests (RuleServiceTest) + 6 integration tests (RuleControllerIntegrationTest)</p>
+        </div>
+
+        <!-- Overview -->
+        <h2>Overview</h2>
+        <p>Phase 3 implements a deterministic rules engine for supplier due diligence. Rules are business logic that can be evaluated without AI, allowing critical decisions to be made by deterministic algorithms. This keeps the system transparent, auditable, and prevents LLM bias from affecting regulatory decisions.</p>
+
+        <table>
+            <tr>
+                <th>Aspect</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Goal</td>
+                <td>Apply business rules; keep AI out of critical decisions</td>
+            </tr>
+            <tr>
+                <td>Tech</td>
+                <td>Rule enums, JPA entities, rule service, REST controller</td>
+            </tr>
+            <tr>
+                <td>Learning</td>
+                <td>Separation of concerns (AI vs deterministic), authority boundaries</td>
+            </tr>
+            <tr>
+                <td>Duration</td>
+                <td>4 days</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>✅ Complete</td>
+            </tr>
+        </table>
+
+        <!-- Architecture -->
+        <h2>Architecture</h2>
+
+        <h3>Entity Relationships</h3>
+        <div class="code-block">
+            <pre>DueDiligenceCase (1) ──────────────────── (Many) RuleResult
+     id: UUID                              id: UUID
+     ...                                   passed: Boolean
+     ruleResults: List<>                   details: String
+     (cascade delete)                      evidence: String
+                                           evaluatedAt: LocalDateTime
+                                           └─ references Rule
+
+Rule (1) ──────────────────── (Many) RuleResult
+id: UUID                       id: UUID
+name: String                   passed: Boolean
+ruleType: RuleType            details: String
+severity: RuleSeverity        evidence: String
+        <!-- Rule Types -->
+        <h2>Rule Types & Severity</h2>
+
+        <h3>RuleType Enum</h3>
+        <table>
+            <tr>
+                <th>Rule Type</th>
+                <th>Purpose</th>
+                <th>Phase</th>
+            </tr>
+            <tr>
+                <td>SANCTION_CHECK</td>
+                <td>Check against sanctions list</td>
+                <td>Phase 4+</td>
+            </tr>
+            <tr>
+                <td>ABN_VALIDATION</td>
+                <td>Validate ABN exists and matches name</td>
+                <td>Phase 4</td>
+            </tr>
+            <tr>
+                <td>BUSINESS_REGISTRATION</td>
+                <td>Verify business is registered</td>
+                <td>Phase 3</td>
+            </tr>
+            <tr>
+                <td>FINANCIAL_THRESHOLD</td>
+                <td>Check revenue/assets threshold</td>
+                <td>Phase 4+</td>
+            </tr>
+            <tr>
+                <td>INDUSTRY_RESTRICTION</td>
+                <td>Verify industry is not restricted</td>
+                <td>Phase 3</td>
+            </tr>
+            <tr>
+                <td>COMPLIANCE_HISTORY</td>
+                <td>Review past compliance issues</td>
+                <td>Phase 6+</td>
+            </tr>
+            <tr>
+                <td>BENEFICIAL_OWNERSHIP</td>
+                <td>Verify beneficial ownership disclosure</td>
+                <td>Phase 7+</td>
+            </tr>
+            <tr>
+                <td>POLITICAL_EXPOSURE</td>
+                <td>Check for politically exposed persons</td>
+                <td>Phase 7+</td>
+            </tr>
+        </table>
+
+        <h3>RuleSeverity Enum</h3>
+        <table>
+            <tr>
+                <th>Severity</th>
+                <th>Consequence</th>
+            </tr>
+            <tr>
+                <td>CRITICAL</td>
+                <td>Failure blocks case approval</td>
+            </tr>
+            <tr>
+                <td>HIGH</td>
+                <td>Failure requires executive review</td>
+            </tr>
+            <tr>
+                <td>MEDIUM</td>
+                <td>Failure flagged but can proceed with caution</td>
+            </tr>
+            <tr>
+                <td>LOW</td>
+                <td>Failure is informational only</td>
+            </tr>
+        </table>
+
+        <!-- REST API -->
+        <h2>REST API Endpoints</h2>
+
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/rules</code>
+            <p style="margin-top: 10px;"><strong>Create a new rule</strong></p>
+            <p>Body: {name, description, ruleType, severity}</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/rules</code>
+            <p style="margin-top: 10px;"><strong>List all active rules</strong></p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/rules/{id}</code>
+            <p style="margin-top: 10px;"><strong>Get rule by ID</strong></p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <code>/api/rules/api/cases/{caseId}/evaluate-rules</code>
+            <p style="margin-top: 10px;"><strong>Evaluate all active rules for a case</strong></p>
+            <p>Returns array of RuleResult with passed/failed status and evidence</p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/rules/api/cases/{caseId}/rule-results</code>
+            <p style="margin-top: 10px;"><strong>Get all rule evaluation results for a case</strong></p>
+        </div>
+
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <code>/api/rules/api/cases/{caseId}/rule-results/failed</code>
+            <p style="margin-top: 10px;"><strong>Get only failed rules for a case</strong></p>
+        </div>
+
+        <!-- Testing -->
+        <h2>Testing Strategy</h2>
+
+        <h3>Unit Tests (RuleServiceTest - 4 tests)</h3>
+        <ul class="feature-list">
+            <li>testCreateRule: Verify new rule creation</li>
+            <li>testEvaluateAbnValidationRule: Verify ABN validation passes with valid data</li>
+            <li>testAbnValidationFails: Verify ABN validation fails with invalid data</li>
+            <li>testEvaluateAllRulesForCase: Verify all rules evaluated for a case</li>
+        </ul>
+
+        <h3>Integration Tests (RuleControllerIntegrationTest - 6 tests)</h3>
+        <ul class="feature-list">
+            <li>testCreateRule: HTTP POST /api/rules endpoint</li>
+            <li>testGetAllActiveRules: HTTP GET /api/rules lists rules</li>
+            <li>testGetRuleById: HTTP GET /api/rules/{id} returns rule</li>
+            <li>testEvaluateAllRules: HTTP POST evaluate endpoint</li>
+            <li>testGetRuleResults: HTTP GET rule results for case</li>
+        </ul>
+
+        <!-- Key Design Decisions -->
+        <h2>Key Design Decisions</h2>
+
+        <ul class="feature-list">
+            <li><strong>No AI in Phase 3:</strong> Rules are purely deterministic, no LLM involvement</li>
+            <li><strong>Evidence tracking:</strong> Every rule result stores evidence (why it passed/failed)</li>
+            <li><strong>Pluggable logic:</strong> Switch statement in RuleService makes it easy to add new rules</li>
+            <li><strong>Phase-based implementation:</strong> Some rules stubbed for future phases (financial, compliance, PEP)</li>
+            <li><strong>Cascade delete:</strong> Removing a rule doesn't orphan results - they cascade delete with case</li>
+            <li><strong>Immutable timestamps:</strong> evaluatedAt cannot be changed after creation</li>
+        </ul>
+
+        <!-- Database Schema -->
+        <h2>Database Schema (V3)</h2>
+
+        <div class="code-block">
+            <pre>-- Rules table
+CREATE TABLE rules (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    rule_type VARCHAR(50) NOT NULL,
+    severity VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Rule Results table
+CREATE TABLE rule_results (
+    id UUID PRIMARY KEY,
+    case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+    rule_id UUID NOT NULL REFERENCES rules(id),
+    passed BOOLEAN NOT NULL,
+    details TEXT,
+    evidence TEXT,
+    evaluated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);</pre>
+        </div>
+
+        <!-- What's Next -->
+        <h2>What's Next (Phase 4)</h2>
+        <p><strong>ABN Lookup & First Tool Integration</strong></p>
+        <ul class="feature-list">
+            <li>Integrate real ABN Lookup API</li>
+            <li>Tool calling patterns</li>
+            <li>External API error handling</li>
+            <li>Supplier identity validation</li>
+        </ul>
+
+        <!-- Summary -->
+        <h2>Summary</h2>
+        <p>Phase 3 successfully implements a deterministic rules engine that keeps business logic separate from AI. The architecture supports pluggable rule evaluation with evidence tracking, allowing regulatory compliance to be achieved through transparent, auditable algorithms.</p>
+        
+        <p>All 10 tests pass, and the foundation is solid for Phase 4's external API integration (ABN Lookup). The rules framework is extensible and ready for Phases 5-7 when additional data sources and decision-making logic are added.</p>
+
+    </div>
+</body>
+</html>

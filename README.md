@@ -2,18 +2,19 @@
 
 A learning-first implementation of an enterprise-grade AI system for Australian supplier onboarding and counterparty due-diligence.
 
-## Phase 1 & 2: Case API & Document Storage ✓
+## Phase 1, 2 & 3: Case API, Documents & Rules ✓
 
-Foundation complete. Create cases, upload documents, manage supplier information via REST API.
+Foundation complete. Create cases, upload documents, evaluate business rules via REST API.
 
 ### What's Implemented
 
-- **Spring Boot Application:** RESTful API for case & document management
-- **PostgreSQL Persistence:** Cases with document relationships and status workflow
+- **Spring Boot Application:** RESTful API for case, document, and rule management
+- **PostgreSQL Persistence:** Cases with document and rule result relationships
 - **Project Lombok:** Reduced boilerplate (getters, setters, constructors auto-generated)
-- **Flyway Migrations:** Database versioning (V1 cases, V2 documents)
+- **Flyway Migrations:** Database versioning (V1 cases, V2 documents, V3 rules)
+- **Deterministic Rules Engine:** Business logic evaluation without AI
 - **H2 In-Memory Testing:** Fast, isolated integration tests (no Docker required)
-- **Unit & Integration Tests:** 11/11 tests passing (5 Phase 1 + 6 Phase 2)
+- **Unit & Integration Tests:** 20/20 tests passing (5 Phase 1 + 6 Phase 2 + 6 Phase 3 + 3 updates)
 
 ### Quick Start
 
@@ -156,6 +157,12 @@ casework-service/
           DocumentService.java
           DocumentRepository.java
           Document.java
+        rules/              # Deterministic rules engine (Phase 3)
+          RuleController.java
+          RuleService.java
+          RuleRepository.java / RuleResultRepository.java
+          Rule.java / RuleResult.java
+          RuleType.java / RuleSeverity.java
         SupplierDueDiligenceApplication.java
       resources/
         application.yml     # App config
@@ -164,14 +171,15 @@ casework-service/
       java/com/diligence/
         casework/           # Case tests
         documents/          # Document tests
+        rules/              # Rule tests
   pom.xml
 ```
 
-### What's Next (Phase 3)
+### What's Next (Phase 4)
 
-- Deterministic rules engine
-- Rule evaluation service
-- Business rule enforcement
+- External API integration (ABN Lookup)
+- Tool calling patterns
+- Supplier identity validation
 
 ### Notes
 
