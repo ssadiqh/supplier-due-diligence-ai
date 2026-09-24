@@ -32,6 +32,18 @@ app:
     dir: ./data/case-documents
     max-file-size: 10MB
 
+abn:
+  lookup:
+    url: https://api.abr.business.gov.au/v1/
+    api-key: ${ABN_API_KEY:}
+    timeout: 5000
+    max-retries: 3
+
+http:
+  client:
+    connection-timeout: 5000
+    socket-timeout: 5000
+
 logging:
   level:
     root: INFO
