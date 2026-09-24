@@ -2,9 +2,9 @@
 
 A learning-first implementation of an enterprise-grade AI system for Australian supplier onboarding and counterparty due-diligence.
 
-## Phase 1, 2 & 3: Case API, Documents & Rules ✓
+## Phase 1-4: Case API, Documents, Rules & Tool Integration ✓
 
-Foundation complete. Create cases, upload documents, evaluate business rules via REST API.
+Foundation complete. Create cases, upload documents, evaluate business rules, verify suppliers via ABN lookup.
 
 ### What's Implemented
 
@@ -14,7 +14,7 @@ Foundation complete. Create cases, upload documents, evaluate business rules via
 - **Flyway Migrations:** Database versioning (V1 cases, V2 documents, V3 rules)
 - **Deterministic Rules Engine:** Business logic evaluation without AI
 - **H2 In-Memory Testing:** Fast, isolated integration tests (no Docker required)
-- **Unit & Integration Tests:** 20/20 tests passing (5 Phase 1 + 6 Phase 2 + 6 Phase 3 + 3 updates)
+- **Unit & Integration Tests:** 26/26 tests passing (3 Phase 1 + 3 Phase 2 + 4 Phase 3 + 6 Phase 4, 8 integration tests across phases)
 
 ### Quick Start
 
@@ -163,6 +163,13 @@ casework-service/
           RuleRepository.java / RuleResultRepository.java
           Rule.java / RuleResult.java
           RuleType.java / RuleSeverity.java
+        tools/              # External tool integration (Phase 4)
+          ToolController.java
+          SupplierVerificationService.java
+          ABNLookupService.java
+          ToolResult.java / ToolResultRepository.java
+        config/             # Spring configuration
+          RestTemplateConfig.java
         SupplierDueDiligenceApplication.java
       resources/
         application.yml     # App config
@@ -175,18 +182,20 @@ casework-service/
   pom.xml
 ```
 
-### What's Next (Phase 4)
+### What's Next (Phase 5)
 
-- External API integration (ABN Lookup)
-- Tool calling patterns
-- Supplier identity validation
+- Document evidence extraction using Spring AI
+- PDF text parsing and structured fact extraction
+- LLM tool calling and prompt design
+- Evidence grounding with page references
 
 ### Notes
 
-- **No AI yet.** Phase 1 focuses on REST/persistence patterns and the case model foundation.
-- **Tests are comprehensive.** Run `mvn test` to verify everything works.
-- **Database is PostgreSQL.** Local dev uses Docker; later phases will use Azure PostgreSQL.
-- **Flyway manages migrations.** Each schema change is versioned and tracked.
+- **No LLM AI yet.** Phases 1-4 focus on deterministic logic, API patterns, and tool calling infrastructure.
+- **Tests are comprehensive.** Run `mvn test` to verify everything works (26/26 passing).
+- **Database is PostgreSQL.** Local dev uses Docker; H2 for testing.
+- **Flyway manages migrations.** Each schema change is versioned and tracked (V1-V4).
+- **Tool calling ready.** Phase 4 demonstrates external API integration pattern for future agents.
 
 ---
 

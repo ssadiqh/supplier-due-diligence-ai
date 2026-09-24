@@ -11,8 +11,8 @@ import java.util.UUID;
 @Table(name = "documents")
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"createdAt"})
-@ToString(exclude = {"createdAt"})
+@EqualsAndHashCode(exclude = {"uploadedAt", "caseEntity"})
+@ToString(exclude = {"uploadedAt", "caseEntity"})
 public class Document {
 
     @Id
