@@ -3,6 +3,10 @@ package com.diligence.tools;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -48,7 +52,9 @@ public class ABNLookupService {
     /**
      * Call ABN Lookup API via Australian Business Register
      * Real API: https://api.abr.business.gov.au/v1/
-     * Requires: apiKey environment variable
+     * Requires: apiKey environment variable (obtained from abr.business.gov.au)
+     *
+     * API Docs: https://www.asic.gov.au/online-services/access-to-asic-data/asic-download-data/access-the-abr-data-guide/
      */
     private ABNLookupResult callABNAPI(String abn) {
         if (apiKey == null || apiKey.isEmpty()) {
@@ -57,20 +63,36 @@ public class ABNLookupService {
         }
 
         try {
+            // Real ABR API endpoint: GET /v1/organisation/{abn}
             String url = abnLookupUrl + "organisation/" + abn;
+            log.debug("Calling ABN API: {}", url);
+
+            // Prepare request with authentication header
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + apiKey);
+            headers.set("Accept", "application/json");
+
+            HttpEntity<String> request = new HttpEntity<>(headers);
 
             // Call real ABR API via RestTemplate
-            ABNResponse response = restTemplate.getForObject(url, ABNResponse.class);
+            ResponseEntity<AbrOrganisationResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                request,
+                AbrOrganisationResponse.class
+            );
 
-            if (response == null) {
+            if (response.getBody() == null) {
+                log.warn("ABN {} not found in registry", abn);
                 return new ABNLookupResult(abn, "Unknown", "Unknown", false);
             }
 
+            AbrOrganisationResponse body = response.getBody();
             return new ABNLookupResult(
                 abn,
-                response.businessName,
-                response.status,
-                response.found
+                body.businessName,
+                body.businessStatus,
+                true  // found
             );
         } catch (Exception e) {
             log.error("Error calling ABN API for {}: {}", abn, e.getMessage());
@@ -79,12 +101,16 @@ public class ABNLookupService {
     }
 
     /**
-     * ABN API response structure from ABR
+     * ABR API response structure for organisation endpoint
+     * Maps to actual ABR JSON response
      */
-    public static class ABNResponse {
+    public static class AbrOrganisationResponse {
         public String businessName;
-        public String status;
-        public boolean found;
+        public String businessStatus;  // "Active", "Cancelled", "Suspended", etc.
+        public String abn;
+        public String acn;
+        public String stateOfRegistration;
+        public String lastUpdatedDate;
     }
 
     /**
