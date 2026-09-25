@@ -1,27 +1,11 @@
 package com.diligence.tools;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ABNLookupService {
-
-    private final RestTemplate restTemplate;
-
-    @Value("${abn.lookup.url:https://api.abr.business.gov.au/v1/}")
-    private String abnLookupUrl;
-
-    @Value("${abn.lookup.api-key:}")
-    private String apiKey;
-
-    @Value("${abn.lookup.timeout:5000}")
-    private int timeout;
 
     /**
      * Lookup ABN details from Australian Business Register
@@ -39,25 +23,14 @@ public class ABNLookupService {
             throw new RuntimeException("ABN must be 11 digits");
         }
 
-        try {
-            log.info("Looking up ABN: {}", abn);
+        log.info("Looking up ABN: {}", abn);
 
-            // Call ABN Lookup API
-            // In Phase 4, we use a mock/test API
-            // Phase 4+ will integrate real ABR API: https://api.abr.business.gov.au/v1/
-            String url = abnLookupUrl + "organisation/" + abn;
+        // Phase 4: Mock/simulated API call
+        // Phase 5+: Will integrate real ABR API: https://api.abr.business.gov.au/v1/
+        ABNLookupResult result = callABNAPI(abn);
 
-            // For Phase 4 learning: simulate API response
-            // Real implementation would call the actual API
-            ABNLookupResult result = callABNAPI(abn);
-
-            log.info("ABN lookup successful: {}", abn);
-            return result;
-
-        } catch (RestClientException e) {
-            log.error("ABN lookup failed for {}: {}", abn, e.getMessage());
-            throw new RuntimeException("Failed to lookup ABN: " + e.getMessage());
-        }
+        log.info("ABN lookup successful: {}", abn);
+        return result;
     }
 
     /**
