@@ -1,7 +1,25 @@
 # Supplier Due-Diligence AI: 10-Phase Implementation Plan
 
 ## Overview
+
 Phased learning-first approach starting with REST API, progressing through tools, rules, RAG, and agents. Each phase is independent, testable, and demonstrates one capability. Target: ~9 weeks total; first working vertical slice in 4-5 weeks.
+
+### Learning Goals
+
+- **Spring Boot 3**: Dependency injection, JPA, REST, testing with H2 & Testcontainers
+- **API Integration**: External APIs, tool calling patterns, error handling, timeouts
+- **LLM Tooling**: Spring AI, structured outputs, tool governance, MCP protocol
+- **RAG**: Vector search with pgvector, hybrid retrieval, citation tracking, grounding
+- **Agents**: Bounded scope, decision gates, human-in-the-loop, evidence trails
+- **Enterprise Patterns**: State machines, audit logging, immutable records, cascading deletes
+
+### Key Design Principles
+
+1. **No AI in critical decisions**: Rules engine is deterministic, LLM is advisory only
+2. **Evidence grounding**: Every finding cites source (document, tool result, rule, policy)
+3. **Human authority**: Agents investigate, humans decide
+4. **Immutable audit trails**: Tool results and rule evaluations never change
+5. **Read-only agents**: Tools query data; no autonomous writes to source systems
 
 ## Phase Breakdown
 
