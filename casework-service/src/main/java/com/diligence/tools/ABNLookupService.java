@@ -1,6 +1,7 @@
 package com.diligence.tools;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -109,25 +110,12 @@ public class ABNLookupService {
         @JsonProperty("ABN")
         private String abn;
 
-        @JsonProperty("ACN")
-        private String acn;
-
         @JsonProperty("EntityName")
         private String businessName;
 
         @JsonProperty("EntityStatus")
-        private String businessStatus;  // "Active", "Cancelled", "Suspended", etc.
+        private String businessStatus;
 
-        @JsonProperty("StateCode")
-        private String stateCode;
-
-        @JsonProperty("LastUpdateDate")
-        private String lastUpdateDate;
-
-        @JsonProperty("IsCurrentIndicator")
-        private String isCurrentIndicator;
-
-        // Getters for main fields
         public String getBusinessName() {
             return businessName != null ? businessName : "Unknown";
         }
@@ -137,46 +125,18 @@ public class ABNLookupService {
         }
 
         public boolean isSuccess() {
-            // API returns data if ABN found, empty response if not found
             return abn != null && !abn.isEmpty();
-        }
-
-        // Other getters
-        public String getAbn() {
-            return abn;
-        }
-
-        public String getAcn() {
-            return acn;
-        }
-
-        public String getStateCode() {
-            return stateCode;
-        }
-
-        public String getLastUpdateDate() {
-            return lastUpdateDate;
-        }
-
-        public String getIsCurrentIndicator() {
-            return isCurrentIndicator;
         }
     }
 
     /**
      * Response from ABN Lookup service
      */
+    @Data
     public static class ABNLookupResult {
-        public String abn;
-        public String businessName;
-        public String status;  // Active, Cancelled, Suspended, etc.
-        public boolean found;
-
-        public ABNLookupResult(String abn, String businessName, String status, boolean found) {
-            this.abn = abn;
-            this.businessName = businessName;
-            this.status = status;
-            this.found = found;
-        }
+        private final String abn;
+        private final String businessName;
+        private final String status;
+        private final boolean found;
     }
 }

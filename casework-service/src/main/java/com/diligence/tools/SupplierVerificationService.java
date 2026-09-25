@@ -1,5 +1,7 @@
 package com.diligence.tools;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,7 +43,7 @@ public class SupplierVerificationService {
             // 2. Compare names (fuzzy matching)
             NameMatchResult nameMatch = matchSupplierNames(
                 caseEntity.getSupplierName(),
-                abnResult.businessName
+                abnResult.getBusinessName()
             );
 
             // 3. Build evidence
@@ -169,17 +171,17 @@ public class SupplierVerificationService {
         evidence.append("ABN Lookup Tool Execution:\n");
         evidence.append("- ABN: ").append(caseEntity.getSupplierAbn()).append("\n");
         evidence.append("- Case Name: ").append(caseEntity.getSupplierName()).append("\n");
-        evidence.append("- Registry Name: ").append(abnResult.businessName).append("\n");
-        evidence.append("- Business Status: ").append(abnResult.status).append("\n");
-        evidence.append("- Name Match: ").append(nameMatch.matches ? "YES" : "NO").append("\n");
-        evidence.append("- Similarity Score: ").append(String.format("%.2f", nameMatch.similarity * 100)).append("%\n");
+        evidence.append("- Registry Name: ").append(abnResult.getBusinessName()).append("\n");
+        evidence.append("- Business Status: ").append(abnResult.getStatus()).append("\n");
+        evidence.append("- Name Match: ").append(nameMatch.isMatches() ? "YES" : "NO").append("\n");
+        evidence.append("- Similarity Score: ").append(String.format("%.2f", nameMatch.getSimilarity() * 100)).append("%\n");
         evidence.append("- Verdict: ");
 
-        if (!abnResult.found) {
+        if (!abnResult.isFound()) {
             evidence.append("ABN not found in registry - HIGH RISK");
-        } else if (!abnResult.status.equals("Active")) {
+        } else if (!abnResult.getStatus().equals("Active")) {
             evidence.append("Business not active - REVIEW REQUIRED");
-        } else if (nameMatch.matches) {
+        } else if (nameMatch.isMatches()) {
             evidence.append("Name matches registry - VERIFIED");
         } else {
             evidence.append("Name does not match registry - INVESTIGATE");
@@ -202,24 +204,19 @@ public class SupplierVerificationService {
     /**
      * Tool input record
      */
+    @Data
+    @AllArgsConstructor
     public static class ToolInput {
-        public String abn;
-
-        public ToolInput(String abn) {
-            this.abn = abn;
-        }
+        private String abn;
     }
 
     /**
      * Name match result
      */
+    @Data
+    @AllArgsConstructor
     private static class NameMatchResult {
-        boolean matches;
-        double similarity;
-
-        NameMatchResult(boolean matches, double similarity) {
-            this.matches = matches;
-            this.similarity = similarity;
-        }
+        private boolean matches;
+        private double similarity;
     }
 }
