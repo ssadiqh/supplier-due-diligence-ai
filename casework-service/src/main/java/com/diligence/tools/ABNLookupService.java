@@ -1,11 +1,23 @@
 package com.diligence.tools;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ABNLookupService {
+
+    private final RestTemplate restTemplate;
+
+    @Value("${abn.lookup.url:https://api.abr.business.gov.au/v1/}")
+    private String abnLookupUrl;
+
+    @Value("${abn.lookup.api-key:}")
+    private String apiKey;
 
     /**
      * Lookup ABN details from Australian Business Register
@@ -34,22 +46,45 @@ public class ABNLookupService {
     }
 
     /**
-     * Mock/simulated ABN API call
-     * Phase 4 learning: demonstrates tool calling pattern
-     * Real implementation would use RestTemplate to call actual API
+     * Call ABN Lookup API via Australian Business Register
+     * Real API: https://api.abr.business.gov.au/v1/
+     * Requires: apiKey environment variable
      */
     private ABNLookupResult callABNAPI(String abn) {
-        // In production, this would be:
-        // RestTemplate.getForObject(url, ABNLookupResult.class)
+        if (apiKey == null || apiKey.isEmpty()) {
+            log.warn("ABN_API_KEY not configured, using mock data");
+            return new ABNLookupResult(abn, "Test Company Pty Ltd", "Active", true);
+        }
 
-        // For Phase 4 learning, return mock data
-        // Phase 5+ will integrate real ABR API
-        return new ABNLookupResult(
-            abn,
-            "Test Company Pty Ltd",
-            "Active",
-            true
-        );
+        try {
+            String url = abnLookupUrl + "organisation/" + abn;
+
+            // Call real ABR API via RestTemplate
+            ABNResponse response = restTemplate.getForObject(url, ABNResponse.class);
+
+            if (response == null) {
+                return new ABNLookupResult(abn, "Unknown", "Unknown", false);
+            }
+
+            return new ABNLookupResult(
+                abn,
+                response.businessName,
+                response.status,
+                response.found
+            );
+        } catch (Exception e) {
+            log.error("Error calling ABN API for {}: {}", abn, e.getMessage());
+            throw new RuntimeException("ABN API call failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * ABN API response structure from ABR
+     */
+    public static class ABNResponse {
+        public String businessName;
+        public String status;
+        public boolean found;
     }
 
     /**
