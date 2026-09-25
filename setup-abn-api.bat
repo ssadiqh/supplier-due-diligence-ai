@@ -8,9 +8,9 @@ echo ABN API Credentials Setup
 echo ===================================
 echo.
 
-REM Check if API key already set
-if "%ABN_API_KEY%"=="" (
-    echo WARNING: ABN_API_KEY environment variable not set
+REM Check if GUID already set
+if "%ABN_LOOKUP_GUID%"=="" (
+    echo WARNING: ABN_LOOKUP_GUID environment variable not set
     echo.
     echo Choose an option:
     echo 1) Set a TEST key (for development)
@@ -22,31 +22,22 @@ if "%ABN_API_KEY%"=="" (
 
     if "!choice!"=="1" (
         echo.
-        echo Setting TEST key for development...
-        set ABN_API_KEY=test_key_development_only
-        echo OK: ABN_API_KEY=test_key_development_only (temporary for this session)
-        echo.
-        echo To make this PERMANENT:
-        echo   1. Right-click "This PC" or "Computer"
-        echo   2. Click "Properties"
-        echo   3. Click "Advanced system settings"
-        echo   4. Click "Environment Variables"
-        echo   5. Under "User variables", click "New"
-        echo   6. Variable name: ABN_API_KEY
-        echo   7. Variable value: test_key_development_only
-        echo   8. Click OK and restart PowerShell/Command Prompt
+        echo Skipping GUID setup. Application will use mock data for testing.
+        echo To add real credentials later:
+        echo   setx ABN_LOOKUP_GUID "your-guid-from-abr-email"
+        exit /b 0
     ) else if "!choice!"=="2" (
         echo.
-        set /p api_key="Enter your ASIC ABN API key: "
-        if "!api_key!"=="" (
-            echo ERROR: API key cannot be empty
+        set /p guid="Enter your ABN Lookup GUID (from abr.business.gov.au): "
+        if "!guid!"=="" (
+            echo ERROR: GUID cannot be empty
             exit /b 1
         )
-        set ABN_API_KEY=!api_key!
-        echo OK: ABN_API_KEY is set
+        set ABN_LOOKUP_GUID=!guid!
+        echo OK: ABN_LOOKUP_GUID is set
         echo.
         echo To make this PERMANENT (one-time setup):
-        echo   setx ABN_API_KEY "!api_key!"
+        echo   setx ABN_LOOKUP_GUID "!guid!"
         echo   Then restart PowerShell/Command Prompt
     ) else if "!choice!"=="3" (
         echo Skipping setup. Application will use mock data.
@@ -56,8 +47,8 @@ if "%ABN_API_KEY%"=="" (
         exit /b 1
     )
 ) else (
-    echo OK: ABN_API_KEY is already set
-    echo   Value: %ABN_API_KEY:~0,20%... (first 20 chars)
+    echo OK: ABN_LOOKUP_GUID is already set
+    echo   Value: %ABN_LOOKUP_GUID:~0,20%... (first 20 chars)
 )
 
 echo.
@@ -66,13 +57,17 @@ echo Verifying Setup
 echo ===================================
 echo.
 
-REM Verify key is set
-if "%ABN_API_KEY%"=="" (
-    echo ERROR: ABN_API_KEY not set
-    exit /b 1
-)
+REM Verify GUID is set (if user chose option 2)
+REM Skip this check - GUID is optional, mock will be used if not set
+REM if "%ABN_LOOKUP_GUID%"=="" (
+REM    echo WARNING: ABN_LOOKUP_GUID not set - will use mock data
+REM )
 
-echo OK: ABN_API_KEY is configured
+if not "%ABN_LOOKUP_GUID%"=="" (
+    echo OK: ABN_LOOKUP_GUID is configured
+) else (
+    echo INFO: ABN_LOOKUP_GUID not set - application will use mock data
+)
 echo.
 
 REM Check if application.yml exists
@@ -116,6 +111,8 @@ echo ===================================
 echo OK: Setup complete!
 echo ===================================
 echo.
-echo To make ABN_API_KEY permanent, run:
-echo   setx ABN_API_KEY "%ABN_API_KEY%"
-echo Then restart PowerShell/Command Prompt
+if not "%ABN_LOOKUP_GUID%"=="" (
+    echo To make ABN_LOOKUP_GUID permanent, run:
+    echo   setx ABN_LOOKUP_GUID "%ABN_LOOKUP_GUID%"
+    echo Then restart PowerShell/Command Prompt
+)

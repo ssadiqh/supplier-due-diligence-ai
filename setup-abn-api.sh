@@ -8,9 +8,9 @@ echo "ABN API Credentials Setup"
 echo "==================================="
 echo ""
 
-# Check if API key already set
-if [ -z "$ABN_API_KEY" ]; then
-    echo "⚠️  ABN_API_KEY environment variable not set"
+# Check if GUID already set
+if [ -z "$ABN_LOOKUP_GUID" ]; then
+    echo "⚠️  ABN_LOOKUP_GUID environment variable not set"
     echo ""
     echo "Do you want to:"
     echo "1) Set a TEST key (for development)"
@@ -22,25 +22,23 @@ if [ -z "$ABN_API_KEY" ]; then
     case $choice in
         1)
             echo ""
-            echo "Setting TEST key for development..."
-            export ABN_API_KEY="test_key_development_only"
-            echo "✓ ABN_API_KEY=test_key_development_only (temporary)"
-            echo ""
-            echo "To make this permanent, add to ~/.bash_profile or ~/.zshrc:"
-            echo "  export ABN_API_KEY='test_key_development_only'"
+            echo "Skipping GUID setup. Application will use mock data for testing."
+            echo "To add real credentials later:"
+            echo "  export ABN_LOOKUP_GUID='your-guid-from-abr-email'"
+            exit 0
             ;;
         2)
             echo ""
-            read -p "Enter your ASIC ABN API key: " api_key
-            if [ -z "$api_key" ]; then
-                echo "❌ API key cannot be empty"
+            read -p "Enter your ABN Lookup GUID (from abr.business.gov.au): " guid
+            if [ -z "$guid" ]; then
+                echo "❌ GUID cannot be empty"
                 exit 1
             fi
-            export ABN_API_KEY="$api_key"
-            echo "✓ ABN_API_KEY is set (${#api_key} characters)"
+            export ABN_LOOKUP_GUID="$guid"
+            echo "✓ ABN_LOOKUP_GUID is set (${#guid} characters)"
             echo ""
             echo "To make this permanent, run:"
-            echo "  echo \"export ABN_API_KEY='$api_key'\" >> ~/.bash_profile"
+            echo "  echo \"export ABN_LOOKUP_GUID='$guid'\" >> ~/.bash_profile"
             echo "  source ~/.bash_profile"
             ;;
         3)
@@ -53,8 +51,8 @@ if [ -z "$ABN_API_KEY" ]; then
             ;;
     esac
 else
-    echo "✓ ABN_API_KEY is already set"
-    echo "  Value: ${ABN_API_KEY:0:20}... (first 20 chars)"
+    echo "✓ ABN_LOOKUP_GUID is already set"
+    echo "  Value: ${ABN_LOOKUP_GUID:0:20}... (first 20 chars)"
 fi
 
 echo ""

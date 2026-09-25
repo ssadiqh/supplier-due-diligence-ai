@@ -1,61 +1,64 @@
-# ABN API Credentials Setup Guide
+# ABN Lookup API Credentials Setup Guide
 
-## Option 1: Direct ABR API (ASIC)
+## Official ABN Lookup API (Recommended)
 
-### Step 1: Apply with ASIC
-1. Go to: https://www.asic.gov.au/online-services/access-to-asic-data/asic-download-data/access-the-abr-data-guide/
-2. Click "Request ABR API Access"
-3. Fill out the application form:
+### Step 1: Register for Free GUID
+1. Go to: https://abr.business.gov.au/Documentation/WebServiceRegistration
+2. Review the **Web Services Agreement**: https://abr.business.gov.au/Tools/WebServicesAgreement
+3. Accept the agreement
+4. Complete the registration form:
    - Organisation name
-   - Use case (supplier verification, due diligence)
-   - Expected volume (queries/month)
-   - Contact details
+   - Use case: "Australian Supplier Due Diligence verification"
+   - Intended use: "Validating supplier ABNs and retrieving publicly available business registration details"
+   - Contact email
 
-### Step 2: Wait for Approval
-- ASIC typically approves within 1-2 weeks
+### Step 2: Receive GUID via Email
+- ABN Lookup processes applications quickly (usually within 1-2 days)
 - You'll receive an email with:
-  - API key / credentials
-  - API documentation
-  - Rate limits (usually 10-100 calls/second)
-  - SLA requirements
+  - **GUID**: Your free authentication credential (no API key, no password)
+  - API endpoints and documentation
+  - No rate limits published (free service)
+  - JSON and XML endpoint options
 
-### Step 3: Get Your API Key
-Once approved, ASIC sends:
+### Step 3: Get Your GUID
+Once approved, ABN Lookup sends:
 ```
-API Endpoint: https://api.abr.business.gov.au/v1/
-API Key: ABC123XYZ789...  (unique to your organisation)
-Authentication: Bearer token in Authorization header
+GUID: 12345678-abcd-ef00-1234-567890abcdef
+(Example - your GUID will be unique)
+
+Endpoint: https://abr.business.gov.au/
+JSON endpoint: /json/AbnDetails.aspx?abn={abn}&guid={guid}
+XML endpoint: /abrxmlsearch/AbrXmlSearch.asmx/SearchByABNv202001?searchString={abn}&authenticationGuid={guid}
 ```
 
 ---
 
-## Option 2: Test with a Mock Key (Development)
+## Option 2: Test with Mock Data (Development)
 
-If you want to test the system now WITHOUT waiting for ASIC approval:
+If you want to test the system now WITHOUT waiting for ABN Lookup registration:
 
-### Step 1: Create a Test API Key
+### Step 1: Run Without GUID
 ```bash
-# Use any string as a test key (won't call real API, just demonstrates setup)
-export ABN_API_KEY="test_key_12345_abcdef"
+# Simply don't set ABN_LOOKUP_GUID environment variable
+
+# Verify it's NOT set:
+echo $ABN_LOOKUP_GUID  # Should be empty
 ```
 
-### Step 2: Set Up Environment
+### Step 2: Run Application
 ```bash
-# Linux/Mac
-export ABN_API_KEY="test_key_12345_abcdef"
-echo $ABN_API_KEY  # Verify it's set
-
-# Windows PowerShell
-$env:ABN_API_KEY = "test_key_12345_abcdef"
-Write-Output $env:ABN_API_KEY  # Verify
-```
-
-### Step 3: Run Application
-```bash
+cd casework-service
 mvn spring-boot:run
 ```
 
-**Note:** With test key, ABN lookups will call the REAL ABR API but will fail (auth error). Our code catches this and returns mock data.
+### Step 3: Observe Behavior
+When ABN_LOOKUP_GUID is not configured:
+- Application logs: `"ABN_LOOKUP_GUID not configured, using mock data"`
+- ABN lookups return mock data (test companies)
+- All tests pass (26/26) using mock fallback
+- No network calls to ABN Lookup API
+
+**When you get your GUID**, simply set it and application will call the real API.
 
 ---
 
@@ -82,48 +85,51 @@ These provide:
 
 ---
 
-## Setting Up Your API Key
+## Setting Up Your GUID
 
 ### On Your Local Machine
 
 #### Linux/Mac:
 ```bash
 # 1. Add to ~/.bash_profile or ~/.zshrc
-echo 'export ABN_API_KEY="your_actual_api_key_here"' >> ~/.bash_profile
+echo 'export ABN_LOOKUP_GUID="your-guid-from-abr-email"' >> ~/.bash_profile
 source ~/.bash_profile
 
 # 2. Verify
-echo $ABN_API_KEY
+echo $ABN_LOOKUP_GUID
 
 # 3. Run app
+cd casework-service
 mvn spring-boot:run
 ```
 
 #### Windows PowerShell:
 ```powershell
 # 1. Set permanent environment variable
-[Environment]::SetEnvironmentVariable("ABN_API_KEY", "your_actual_api_key_here", "User")
+[Environment]::SetEnvironmentVariable("ABN_LOOKUP_GUID", "your-guid-from-abr-email", "User")
 
 # 2. Close and reopen PowerShell
 
 # 3. Verify
-Write-Output $env:ABN_API_KEY
+Write-Output $env:ABN_LOOKUP_GUID
 
 # 4. Run app
+cd casework-service
 mvn spring-boot:run
 ```
 
 #### Windows Command Prompt:
 ```cmd
 # 1. Set environment variable
-setx ABN_API_KEY "your_actual_api_key_here"
+setx ABN_LOOKUP_GUID "your-guid-from-abr-email"
 
 # 2. Close and reopen Command Prompt
 
 # 3. Verify
-echo %ABN_API_KEY%
+echo %ABN_LOOKUP_GUID%
 
 # 4. Run app
+cd casework-service
 mvn spring-boot:run
 ```
 
@@ -132,13 +138,14 @@ mvn spring-boot:run
 FROM openjdk:20-slim
 WORKDIR /app
 COPY target/supplier-due-diligence-ai-0.1.0-SNAPSHOT.jar .
-ENV ABN_API_KEY="your_api_key_here"
+# GUID can be passed at runtime, don't hardcode in image
 ENTRYPOINT ["java", "-jar", "supplier-due-diligence-ai-0.1.0-SNAPSHOT.jar"]
 ```
 
 ```bash
-# Or pass at runtime
-docker run -e ABN_API_KEY="your_api_key" -p 8080:8080 supplier-dd-api
+# Pass GUID at runtime (recommended - never commit GUID to image)
+docker run -e ABN_LOOKUP_GUID="your-guid-from-abr-email" \
+  -p 8080:8080 supplier-dd-api
 ```
 
 ### In Kubernetes
@@ -149,7 +156,7 @@ metadata:
   name: abr-credentials
 type: Opaque
 stringData:
-  api-key: "your_actual_api_key_here"
+  guid: "your-guid-from-abr-email"  # Store GUID securely in secret
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -162,11 +169,11 @@ spec:
       - name: api
         image: supplier-dd-api:latest
         env:
-        - name: ABN_API_KEY
+        - name: ABN_LOOKUP_GUID
           valueFrom:
             secretKeyRef:
               name: abr-credentials
-              key: api-key
+              key: guid
         ports:
         - containerPort: 8080
 ```
@@ -175,10 +182,8 @@ spec:
 ```yaml
 abn:
   lookup:
-    url: https://api.abr.business.gov.au/v1/
-    api-key: ${ABN_API_KEY:}  # Reads from environment variable
-    timeout: 5000
-    max-retries: 3
+    base-url: https://abr.business.gov.au  # Official ABN Lookup service
+    guid: ${ABN_LOOKUP_GUID:}  # Reads from environment variable (empty = mock fallback)
 ```
 
 ---
@@ -242,42 +247,48 @@ curl -X POST http://localhost:8080/api/cases/{caseId}/verify-supplier
 
 ## Debugging
 
-### Problem: "ABN_API_KEY not configured, using mock data"
+### Problem: "ABN_LOOKUP_GUID not configured, using mock data"
 
-**Cause:** Environment variable not set
+**Cause:** Environment variable not set (or not in PATH for application)
 
 **Solution:**
 ```bash
 # Verify variable is set
-echo $ABN_API_KEY  # Should print your key, not empty
+echo $ABN_LOOKUP_GUID  # Should print your GUID, not empty
 
 # If empty, set it:
-export ABN_API_KEY="your_key_here"
+export ABN_LOOKUP_GUID="your-guid-from-abr-email"
 
 # Restart application:
 mvn spring-boot:run
+
+# On Windows, use:
+setx ABN_LOOKUP_GUID "your-guid-from-abr-email"
+# Then close and reopen PowerShell/Command Prompt
 ```
 
-### Problem: "401 Unauthorized"
+### Problem: "Invalid GUID" or API returns error
 
-**Cause:** Invalid API key
+**Cause:** Incorrect GUID or GUID doesn't have access
 
 **Solution:**
 ```bash
-# 1. Verify key is correct (check ASIC email)
-# 2. Verify key hasn't expired
-# 3. Contact ASIC support if key is valid but rejected
+# 1. Verify GUID is correct (check ABN Lookup registration email)
+# 2. Copy/paste GUID exactly (watch for extra spaces)
+# 3. Visit https://abr.business.gov.au/ to test manually
+# 4. If GUID is correct but API still fails, contact ABN Lookup support
 ```
 
-### Problem: "403 Forbidden"
+### Problem: "Connection refused" or timeout
 
-**Cause:** API key doesn't have permission for this endpoint
+**Cause:** Network issue or ABN Lookup service down
 
 **Solution:**
 ```bash
-# 1. Verify your ASIC approval includes ABR API access
-# 2. Check if rate limits exceeded
-# 3. Contact ASIC to update permissions
+# 1. Check internet connection
+# 2. Test ABN Lookup manually: https://abr.business.gov.au/json/AbnDetails.aspx?abn=51835430479&guid=YOUR_GUID
+# 3. Check firewall isn't blocking outbound HTTPS
+# 4. Wait and retry (ABN Lookup might have brief outages)
 ```
 
 ### Problem: "Connection timeout"
@@ -294,38 +305,38 @@ mvn spring-boot:run
 
 ---
 
-## What Happens With/Without API Key
+## What Happens With/Without GUID
 
-### WITH Real API Key (ABN_API_KEY set):
+### WITH Real GUID (ABN_LOOKUP_GUID set):
 ```
 ABN Lookup Request (e.g., 16009661901)
     ↓
 Validate: matches \d{11}? ✓
     ↓
-Call REAL ABR API: https://api.abr.business.gov.au/v1/organisation/16009661901
+Call REAL ABN Lookup API: https://abr.business.gov.au/json/AbnDetails.aspx?abn=16009661901&guid={guid}
     ↓
-Authorization header: Bearer {your_real_api_key}
+GUID authentication: Query parameter guid={your_real_guid}
     ↓
-ABR Response: {"businessName": "QANTAS AIRWAYS LIMITED", "businessStatus": "Active", ...}
+Response: {"EntityName": "QANTAS AIRWAYS LIMITED", "EntityStatus": "Active", ...}
     ↓
 ToolResult saved with REAL data
     ↓
 Success: true, Evidence: "Name matches registry - VERIFIED"
 ```
 
-### WITHOUT API Key (DEFAULT):
+### WITHOUT GUID (DEFAULT):
 ```
 ABN Lookup Request (e.g., 12345678901)
     ↓
 Validate: matches \d{11}? ✓
     ↓
-Check ABN_API_KEY: empty!
+Check ABN_LOOKUP_GUID: empty!
     ↓
 Fall back to MOCK data
     ↓
 ToolResult saved with MOCK data
     ↓
-Success: true, Evidence: "Using mock data for Phase 4 testing"
+Success: true, Evidence: "Test Company Pty Ltd"
 ```
 
 ---
