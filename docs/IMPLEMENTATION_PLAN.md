@@ -161,17 +161,16 @@ docs/               # Architecture, decisions
   - Package: com.diligence.rules
 
 - **Phase 4:** ✅ Complete & Tested
-  - ABN Lookup Service with HTTP client integration
+  - ABN Lookup Service with mock API (real API integration deferred to Phase 5)
   - Supplier Verification Service with fuzzy name matching (Levenshtein distance)
   - Tool Result entity and repository with CASCADE DELETE
   - REST endpoints (POST verify supplier, GET tool results with filtering)
-  - External API error handling with configurable timeout and retries
   - Evidence tracking with JSON serialization of tool input/output
-  - RestTemplate configuration with 5-second timeouts
   - Database migration (V4__Create_tool_results_table.sql) with indices
   - 6 passing tests (3 unit, 3 integration) — 26/26 total test suite passing
+  - Clean code: removed unused variables and RestTemplate (will add back in Phase 5)
   - Package: com.diligence.tools
-  - Configuration: application.yml with ABN lookup settings
+  - Configuration: application.yml with ABN lookup settings (ready for Phase 5)
 
 ---
 
