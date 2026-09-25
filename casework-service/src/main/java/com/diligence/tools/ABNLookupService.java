@@ -1,14 +1,12 @@
 package com.diligence.tools;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Service
@@ -17,11 +15,11 @@ public class ABNLookupService {
 
     private final RestTemplate restTemplate;
 
-    @Value("${abn.lookup.url:https://api.abr.business.gov.au/v1/}")
-    private String abnLookupUrl;
+    @Value("${abn.lookup.base-url:https://abr.business.gov.au}")
+    private String baseUrl;
 
-    @Value("${abn.lookup.api-key:}")
-    private String apiKey;
+    @Value("${abn.lookup.guid:}")
+    private String guid;
 
     /**
      * Lookup ABN details from Australian Business Register
@@ -40,86 +38,138 @@ public class ABNLookupService {
         }
 
         log.info("Looking up ABN: {}", abn);
-
-        // Phase 4: Mock/simulated API call
-        // Phase 5+: Will integrate real ABR API: https://api.abr.business.gov.au/v1/
         ABNLookupResult result = callABNAPI(abn);
-
         log.info("ABN lookup successful: {}", abn);
         return result;
     }
 
     /**
      * Call ABN Lookup API via Australian Business Register
-     * Real API: https://api.abr.business.gov.au/v1/
-     * Requires: apiKey environment variable (obtained from abr.business.gov.au)
+     * Official API: https://abr.business.gov.au/
      *
-     * API Docs: https://www.asic.gov.au/online-services/access-to-asic-data/asic-download-data/access-the-abr-data-guide/
+     * Endpoints:
+     * - JSON: GET /json/AbnDetails.aspx?abn={abn}&guid={guid}
+     * - XML: GET /abrxmlsearch/AbrXmlSearch.asmx/SearchByABNv202001?searchString={abn}&authenticationGuid={guid}
+     *
+     * Authentication: GUID (free, obtained via registration at abr.business.gov.au)
+     *
+     * API Docs: https://abr.business.gov.au/Documentation/WebServiceRegistration
      */
     private ABNLookupResult callABNAPI(String abn) {
-        if (apiKey == null || apiKey.isEmpty()) {
-            log.warn("ABN_API_KEY not configured, using mock data");
+        if (guid == null || guid.isEmpty()) {
+            log.warn("ABN_LOOKUP_GUID not configured, using mock data");
             return new ABNLookupResult(abn, "Test Company Pty Ltd", "Active", true);
         }
 
         try {
-            // Real ABR API endpoint: GET /v1/organisation/{abn}
-            String url = abnLookupUrl + "organisation/" + abn;
-            log.debug("Calling ABN API: {}", url);
+            // Build ABN Lookup JSON endpoint URL with GUID authentication
+            String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/json/AbnDetails.aspx")
+                .queryParam("abn", abn)
+                .queryParam("guid", guid)
+                .toUriString();
 
-            // Prepare request with authentication header
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + apiKey);
-            headers.set("Accept", "application/json");
+            log.debug("Calling ABN Lookup API: /json/AbnDetails.aspx?abn={}&guid=***", abn);
 
-            HttpEntity<String> request = new HttpEntity<>(headers);
+            // Call official ABN Lookup API
+            AbnDetailsResponse response = restTemplate.getForObject(url, AbnDetailsResponse.class);
 
-            // Call real ABR API via RestTemplate
-            ResponseEntity<AbrOrganisationResponse> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                request,
-                AbrOrganisationResponse.class
-            );
+            if (response == null) {
+                log.warn("ABN {} - no response from registry", abn);
+                return new ABNLookupResult(abn, "Unknown", "Unknown", false);
+            }
 
-            if (response.getBody() == null) {
+            // Check if ABN was found
+            if (!response.isSuccess()) {
                 log.warn("ABN {} not found in registry", abn);
                 return new ABNLookupResult(abn, "Unknown", "Unknown", false);
             }
 
-            AbrOrganisationResponse body = response.getBody();
+            // Extract business details from response
+            String businessName = response.getBusinessName();
+            String businessStatus = response.getBusinessStatus();
+
             return new ABNLookupResult(
                 abn,
-                body.businessName,
-                body.businessStatus,
+                businessName,
+                businessStatus,
                 true  // found
             );
         } catch (Exception e) {
-            log.error("Error calling ABN API for {}: {}", abn, e.getMessage());
-            throw new RuntimeException("ABN API call failed: " + e.getMessage());
+            log.error("Error calling ABN Lookup API for {}: {}", abn, e.getMessage());
+            throw new RuntimeException("ABN Lookup API call failed: " + e.getMessage());
         }
     }
 
     /**
-     * ABR API response structure for organisation endpoint
-     * Maps to actual ABR JSON response
+     * ABN Lookup API JSON response
+     * Maps to actual ABN Lookup /json/AbnDetails.aspx endpoint response
      */
-    public static class AbrOrganisationResponse {
-        public String businessName;
-        public String businessStatus;  // "Active", "Cancelled", "Suspended", etc.
-        public String abn;
-        public String acn;
-        public String stateOfRegistration;
-        public String lastUpdatedDate;
+    public static class AbnDetailsResponse {
+        @JsonProperty("ABN")
+        private String abn;
+
+        @JsonProperty("ACN")
+        private String acn;
+
+        @JsonProperty("EntityName")
+        private String businessName;
+
+        @JsonProperty("EntityStatus")
+        private String businessStatus;  // "Active", "Cancelled", "Suspended", etc.
+
+        @JsonProperty("StateCode")
+        private String stateCode;
+
+        @JsonProperty("LastUpdateDate")
+        private String lastUpdateDate;
+
+        @JsonProperty("IsCurrentIndicator")
+        private String isCurrentIndicator;
+
+        // Getters for main fields
+        public String getBusinessName() {
+            return businessName != null ? businessName : "Unknown";
+        }
+
+        public String getBusinessStatus() {
+            return businessStatus != null ? businessStatus : "Unknown";
+        }
+
+        public boolean isSuccess() {
+            // API returns data if ABN found, empty response if not found
+            return abn != null && !abn.isEmpty();
+        }
+
+        // Other getters
+        public String getAbn() {
+            return abn;
+        }
+
+        public String getAcn() {
+            return acn;
+        }
+
+        public String getStateCode() {
+            return stateCode;
+        }
+
+        public String getLastUpdateDate() {
+            return lastUpdateDate;
+        }
+
+        public String getIsCurrentIndicator() {
+            return isCurrentIndicator;
+        }
     }
 
     /**
-     * Response from ABN Lookup API
+     * Response from ABN Lookup service
      */
     public static class ABNLookupResult {
         public String abn;
         public String businessName;
-        public String status;  // Active, Cancelled, etc.
+        public String status;  // Active, Cancelled, Suspended, etc.
         public boolean found;
 
         public ABNLookupResult(String abn, String businessName, String status, boolean found) {

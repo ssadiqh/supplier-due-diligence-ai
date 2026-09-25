@@ -34,15 +34,8 @@ app:
 
 abn:
   lookup:
-    url: https://api.abr.business.gov.au/v1/
-    api-key: ${ABN_API_KEY:}
-    timeout: 5000
-    max-retries: 3
-
-http:
-  client:
-    connection-timeout: 5000
-    socket-timeout: 5000
+    base-url: https://abr.business.gov.au
+    guid: ${ABN_LOOKUP_GUID:}  # Free GUID from abr.business.gov.au registration
 
 logging:
   level:
