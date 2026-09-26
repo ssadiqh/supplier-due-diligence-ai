@@ -10,8 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,17 +44,16 @@ public class DocumentEvidenceAgent {
             // Step 2: Build prompt with document chunks
             String systemPrompt = loadPromptTemplate();
             String chunksText = formatChunksForPrompt(chunks);
-
             String userPrompt = "Extract supplier facts from these document chunks:\n\n" + chunksText;
 
-            // Step 3: Call LLM (using mock for now - implement OpenAI integration when API key available)
-            SupplierFactsOutput factsOutput = extractFactsFromText(chunksText, userPrompt);
+            // Step 3: Call LLM (when Spring AI 2.0+ available with OPENAI_API_KEY)
+            SupplierFactsOutput factsOutput = extractFactsFromDocument(chunksText);
 
             if (factsOutput == null) {
-                return createErrorResult(caseId, documentId, "LLM extraction failed", documentFile.getName());
+                return createErrorResult(caseId, documentId, "Extraction failed", documentFile.getName());
             }
 
-            logger.debug("LLM response for document {}: {} facts found", documentId, factsOutput.getFacts().size());
+            logger.debug("Extracted {} facts from document {}", factsOutput.getFacts().size(), documentId);
 
             // Step 4: Build evidence string
             String evidence = buildEvidenceString(factsOutput);
@@ -87,23 +84,11 @@ public class DocumentEvidenceAgent {
         }
     }
 
-    private SupplierFactsOutput extractFactsFromText(String documentText, String userPrompt) {
+    private SupplierFactsOutput extractFactsFromDocument(String documentText) {
         try {
-            List<SupplierFact> facts = new ArrayList<>();
-
-            if (documentText.toLowerCase().contains("employee")) {
-                facts.add(new SupplierFact("employees", "Not explicitly stated", 0.5, List.of(1), "Document mentions employees"));
-            }
-            if (documentText.toLowerCase().contains("revenue")) {
-                facts.add(new SupplierFact("revenue", "Not explicitly stated", 0.5, List.of(1), "Document mentions revenue"));
-            }
-            if (documentText.toLowerCase().contains("iso") || documentText.toLowerCase().contains("certificat")) {
-                facts.add(new SupplierFact("certifications", "Not explicitly stated", 0.5, List.of(1), "Document mentions certifications"));
-            }
-
             SupplierFactsOutput output = new SupplierFactsOutput();
-            output.setFacts(facts);
-            output.setSummary("Document parsed successfully. When OpenAI API key is configured, facts will be extracted with LLM.");
+            output.setFacts(List.of());
+            output.setSummary("Document ready for extraction. Configure OPENAI_API_KEY and add Spring AI 2.0+ to enable LLM fact extraction.");
             output.setComplete(true);
 
             return output;
@@ -126,7 +111,7 @@ public class DocumentEvidenceAgent {
 
     private String buildEvidenceString(SupplierFactsOutput output) {
         if (output.getFacts() == null || output.getFacts().isEmpty()) {
-            return "No facts extracted from document";
+            return output.getSummary();
         }
 
         StringBuilder evidence = new StringBuilder();
