@@ -78,7 +78,7 @@ class DocumentEvidenceAgentTest {
         );
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
-        // WHEN: Extract evidence
+        // WHEN: Extract evidence (without LLM configured)
         ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Result should have all required fields
@@ -89,27 +89,31 @@ class DocumentEvidenceAgentTest {
         assertNotNull(result.getOutput(), "Should have output");
         assertNotNull(result.getSuccess(), "Should have success field");
         assertNotNull(result.getPromptVersion(), "Should have prompt version");
-        assertNotNull(result.getModelUsed(), "Should have model used");
+        assertNotNull(result.getErrorMessage(), "Should have error/status message");
+        // ModelUsed should be null when LLM not configured
+        assertNull(result.getModelUsed(), "Should not claim model when LLM not configured");
+        assertNull(result.getTokensUsed(), "Should not estimate tokens when LLM not configured");
         assertNotNull(result.getEvidence(), "Should have evidence");
+        assertFalse(result.getSuccess(), "Should be NOT_CONFIGURED, not success");
     }
 
     @Test
-    @DisplayName("Should estimate tokens correctly")
+    @DisplayName("Should return NOT_CONFIGURED when LLM unavailable")
     void testTokenEstimation() {
         // GIVEN: A document with known text size
-        String textContent = "A".repeat(400); // 400 chars ≈ 100 tokens
+        String textContent = "A".repeat(400); // 400 chars
         List<PageChunk> mockChunks = List.of(
             new PageChunk(1, textContent, 0, 400)
         );
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
-        // WHEN: Extract evidence
+        // WHEN: Extract evidence (without LLM configured)
         ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
-        // THEN: Token count should be reasonable
-        assertTrue(result.getSuccess());
-        assertTrue(result.getTokensUsed() > 0, "Should estimate tokens");
-        // Token estimate is length / 4 in our implementation
+        // THEN: Should indicate NOT_CONFIGURED
+        assertFalse(result.getSuccess());
+        assertTrue(result.getErrorMessage().contains("NOT_CONFIGURED"));
+        assertNull(result.getTokensUsed(), "Should not estimate tokens when LLM not configured");
     }
 
     @Test
@@ -123,34 +127,37 @@ class DocumentEvidenceAgentTest {
         );
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
-        // WHEN: Extract evidence
+        // WHEN: Extract evidence (without LLM configured)
         ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
-        // THEN: Should process all pages
-        assertTrue(result.getSuccess(), "Should succeed");
+        // THEN: Should process all pages but return NOT_CONFIGURED
+        assertFalse(result.getSuccess(), "Should be NOT_CONFIGURED");
         assertNotNull(result.getOutput(), "Should have output");
-        assertTrue(result.getEvidence().length() > 0, "Should have evidence");
+        assertTrue(result.getEvidence().length() > 0, "Should have evidence with chunk summary");
+        assertTrue(result.getErrorMessage().contains("NOT_CONFIGURED"));
     }
 
     @Test
-    @DisplayName("Should set correct tool metadata")
+    @DisplayName("Should set correct tool metadata (NOT_CONFIGURED status)")
     void testToolMetadata() {
         // GIVEN: Valid document
         List<PageChunk> mockChunks = List.of(new PageChunk(1, "text", 0, 4));
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
-        // WHEN: Extract evidence
+        // WHEN: Extract evidence without LLM configured
         ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Tool metadata should be correct
         assertEquals("DOCUMENT_EXTRACTION", result.getToolName());
         assertEquals("EVIDENCE_EXTRACTION", result.getToolType());
         assertEquals("v1", result.getPromptVersion());
-        assertEquals("gpt-4-turbo", result.getModelUsed());
+        // ModelUsed should be null when LLM not configured
+        assertNull(result.getModelUsed(), "Should not claim model when NOT_CONFIGURED");
+        assertFalse(result.getSuccess());
     }
 
     @Test
-    @DisplayName("Should format evidence string properly")
+    @DisplayName("Should format evidence string properly (NOT_CONFIGURED)")
     void testEvidenceFormatting() {
         // GIVEN: Document with chunks
         List<PageChunk> mockChunks = List.of(
@@ -158,12 +165,13 @@ class DocumentEvidenceAgentTest {
         );
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
-        // WHEN: Extract evidence
+        // WHEN: Extract evidence without LLM configured
         ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
-        // THEN: Evidence should contain summary
-        assertTrue(result.getSuccess());
+        // THEN: Evidence should contain configuration message
+        assertFalse(result.getSuccess());
         assertNotNull(result.getEvidence());
+        assertTrue(result.getEvidence().contains("Ready for extraction"));
         assertTrue(result.getEvidence().length() > 0);
     }
 }

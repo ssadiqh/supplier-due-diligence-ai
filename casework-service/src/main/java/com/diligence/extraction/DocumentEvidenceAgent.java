@@ -41,16 +41,22 @@ public class DocumentEvidenceAgent {
 
             logger.info("Parsed document {} into {} chunks", documentId, chunks.size());
 
-            // Step 2: Build prompt with document chunks
-            String systemPrompt = loadPromptTemplate();
+            // Step 2: Check if LLM is configured
             String chunksText = formatChunksForPrompt(chunks);
-            String userPrompt = "Extract supplier facts from these document chunks:\n\n" + chunksText;
+            boolean isLlmConfigured = isLlmAvailable();
+
+            if (!isLlmConfigured) {
+                logger.info("LLM not configured for document {}. Returning NOT_CONFIGURED status.", documentId);
+                return createNotConfiguredResult(caseId, documentId, chunks.size(), documentFile.getName());
+            }
 
             // Step 3: Call LLM (when Spring AI 2.0+ available with OPENAI_API_KEY)
+            String systemPrompt = loadPromptTemplate();
+            String userPrompt = "Extract supplier facts from these document chunks:\n\n" + chunksText;
             SupplierFactsOutput factsOutput = extractFactsFromDocument(chunksText);
 
             if (factsOutput == null) {
-                return createErrorResult(caseId, documentId, "Extraction failed", documentFile.getName());
+                return createErrorResult(caseId, documentId, "LLM extraction failed", documentFile.getName());
             }
 
             logger.debug("Extracted {} facts from document {}", factsOutput.getFacts().size(), documentId);
@@ -58,7 +64,7 @@ public class DocumentEvidenceAgent {
             // Step 4: Build evidence string
             String evidence = buildEvidenceString(factsOutput);
 
-            // Step 5: Save result
+            // Step 5: Save result (only mark as success when real extraction occurred)
             ExtractionResult result = new ExtractionResult();
             result.setToolName("DOCUMENT_EXTRACTION");
             result.setToolType("EVIDENCE_EXTRACTION");
@@ -82,6 +88,12 @@ public class DocumentEvidenceAgent {
             logger.error("Error extracting evidence from document {}: {}", documentId, e.getMessage(), e);
             return createErrorResult(caseId, documentId, e.getMessage(), documentFile.getName());
         }
+    }
+
+    private boolean isLlmAvailable() {
+        // Check if Spring AI ChatClient is available and API key is configured
+        String apiKey = System.getenv("OPENAI_API_KEY");
+        return apiKey != null && !apiKey.isBlank();
     }
 
     private SupplierFactsOutput extractFactsFromDocument(String documentText) {
@@ -137,7 +149,9 @@ public class DocumentEvidenceAgent {
         result.setSuccess(false);
         result.setErrorMessage(errorMessage);
         result.setPromptVersion(PROMPT_VERSION);
-        result.setModelUsed("gpt-4-turbo");
+        // Do NOT claim a model was used if extraction failed
+        result.setModelUsed(null);
+        result.setTokensUsed(null);
 
         try {
             result.setInput(objectMapper.writeValueAsString(Map.of(
@@ -146,6 +160,35 @@ public class DocumentEvidenceAgent {
             )));
         } catch (JsonProcessingException e) {
             logger.error("Error writing input JSON: {}", e.getMessage());
+        }
+
+        return result;
+    }
+
+    private ExtractionResult createNotConfiguredResult(UUID caseId, UUID documentId, int chunkCount, String documentName) {
+        ExtractionResult result = new ExtractionResult();
+        result.setToolName("DOCUMENT_EXTRACTION");
+        result.setToolType("EVIDENCE_EXTRACTION");
+        result.setSuccess(false);
+        result.setErrorMessage("NOT_CONFIGURED: LLM extraction not available. Configure OPENAI_API_KEY and Spring AI 2.0+ to enable.");
+        result.setPromptVersion(PROMPT_VERSION);
+        // Do NOT claim a model or tokens when LLM was not called
+        result.setModelUsed(null);
+        result.setTokensUsed(null);
+        result.setEvidence("Document parsed into " + chunkCount + " chunks. Ready for extraction once LLM is configured.");
+
+        try {
+            result.setInput(objectMapper.writeValueAsString(Map.of(
+                "documentId", documentId.toString(),
+                "documentName", documentName,
+                "chunkCount", chunkCount
+            )));
+            result.setOutput(objectMapper.writeValueAsString(Map.of(
+                "status", "NOT_CONFIGURED",
+                "message", "LLM extraction not available"
+            )));
+        } catch (JsonProcessingException e) {
+            logger.error("Error writing JSON: {}", e.getMessage());
         }
 
         return result;

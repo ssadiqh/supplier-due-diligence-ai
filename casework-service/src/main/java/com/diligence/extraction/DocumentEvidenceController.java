@@ -119,6 +119,25 @@ public class DocumentEvidenceController {
 
         logger.info("Fetching extraction results for document {} in case {}", documentId, caseId);
 
+        // Verify case exists
+        var caseEntity = caseRepository.findById(caseId);
+        if (caseEntity.isEmpty()) {
+            logger.error("Case not found: {}", caseId);
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Verify document exists and belongs to case
+        var document = documentRepository.findById(documentId);
+        if (document.isEmpty()) {
+            logger.error("Document not found: {}", documentId);
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (!document.get().getCaseEntity().getId().equals(caseId)) {
+            logger.error("Document {} does not belong to case {}", documentId, caseId);
+            return ResponseEntity.badRequest().build();
+        }
+
         List<ExtractionResult> results = extractionResultRepository.findByDocumentId(documentId);
 
         return ResponseEntity.ok(results);
