@@ -2,9 +2,9 @@
 
 **Purpose:** Production-ready test data, policy corpus, and evaluation infrastructure for the Australian supplier due-diligence AI system. Enables reproducible testing of ABN validation, sanctions screening, entity resolution, and policy-driven decision rules without external dependencies.
 
-**Status:** 🟡 75% COMPLETE → 85% AFTER REORGANIZATION
+**Status:** 🟡 85% COMPLETE → 90% WITH POLICIES
 
-Public source corpus assembled. Infrastructure (fixtures, expected results, manifests) now in place. Still need: complete internal policies, test scenarios, expected results for scenarios.
+Public source corpus assembled. All organizational policies finalized. Infrastructure (fixtures, expected results, manifests) in place. Still need: customize policy templates, build test scenarios.
 
 ---
 
@@ -70,7 +70,11 @@ sample-data/
 
 ### Governance Infrastructure
 - ✅ **policies/public/** — 6 government policy documents (ready for RAG embedding)
-- ✅ **policies/internal/** — 5 policy templates (need customization)
+- ✅ **policies/internal/** — 8 complete organizational policies:
+  - ✅ Supplier Onboarding Standard (workflow stages + decision gates)
+  - ✅ Modern Slavery Assessment Standard (risk assessment + criteria)
+  - ✅ Human Approval & Override Policy (decision authorities)
+  - ✅ 5 policy templates (insurance, evidence matrix, sanctions, counterparty due diligence, risk classification)
 - ✅ **rules/due-diligence-rule-catalogue.yaml** — Executable deterministic rules
 
 ### Test Fixtures & Expected Results
@@ -92,7 +96,7 @@ sample-data/
 
 | Item | Status | Work Required |
 |------|--------|---------------|
-| Internal policies (3 missing) | 📝 5/8 | Supplier Onboarding, Modern Slavery Assessment, Human Approval |
+| ~~Internal policies (3 missing)~~ | ✅ 8/8 COMPLETE | Supplier Onboarding, Modern Slavery Assessment, Human Approval created |
 | Customize 5 templates | 📝 Pending | Remove TEMPLATE_ prefix, adapt to organization |
 | Test scenarios inputs | ⏳ Empty | Benign case (3 docs), Risk case (5 docs) |
 | Test scenarios expected | ⏳ Empty | Expected results JSON for each scenario |
@@ -141,26 +145,26 @@ evaluation/rag/rag-retrieval-test-cases.json  # Known-good queries for precision
 
 ---
 
-## 📋 Critical Missing Items (Blocking Implementation)
+## 📋 Remaining Missing Items (For 100% Completion)
 
-### 1. Internal Policies (CRITICAL)
-- [ ] `policies/internal/supplier-onboarding-standard.md` — Workflow stages, gates, failure handling
-- [ ] `policies/internal/modern-slavery-assessment-standard.md` — Triggers, statement acceptability, escalation
-- [ ] `policies/internal/human-approval-and-override-policy.md` — Decision authorities, prohibited AI decisions
-
-**Why blocking:** Agents cannot make decisions without organizational policy boundaries.
+### 1. Policy Template Customization (MEDIUM PRIORITY)
+- [ ] Customize 5 policy templates (remove TEMPLATE_ prefix, finalize organizational rules)
+- [ ] Templates: Insurance Requirements, Evidence Matrix, Sanctions Procedure, Counterparty Due Diligence, Risk Classification
+- [ ] Why needed: Public-facing policies should reflect this organization's specific requirements
 
 ### 2. Test Scenarios (NEEDED FOR IMPLEMENTATION)
-- [ ] `scenarios/synthetic-benign/input/` — 3 valid documents
-- [ ] `scenarios/synthetic-benign/expected/` — 5 JSON result files
-- [ ] `scenarios/synthetic-risk/input/` — 5 documents with inconsistencies
-- [ ] `scenarios/synthetic-risk/expected/` — 5 JSON result files
+- [ ] `scenarios/synthetic-benign/input/` — 3 valid documents (simulated supplier case)
+- [ ] `scenarios/synthetic-benign/expected/` — 5 JSON result files (expected extraction + decisions)
+- [ ] `scenarios/synthetic-risk/input/` — 5 documents with inconsistencies (high-risk case)
+- [ ] `scenarios/synthetic-risk/expected/` — 5 JSON result files (expected escalations)
 
-**Why needed:** Without expected results, cannot objectively evaluate extraction and decision quality.
+**Why needed:** End-to-end test cases validate the entire workflow from document upload through AI extraction and human approval.
 
 ### 3. Source Manifests (NEEDED FOR REPRODUCIBILITY)
 - [ ] `manifests/source-documents.yaml` — Government PDFs: URLs, versions, SHA-256 checksums
 - [ ] `manifests/dataset-version.yaml` — Changelog, component status, next milestone
+
+**Why needed:** Reproducibility requires knowing exact versions of all source documents and policy compliance.
 
 ---
 
