@@ -70,9 +70,6 @@ public class DocumentParser {
             pageChunks.add(chunk);
 
             position = endPosition - OVERLAP;
-            if (position < endPosition - OVERLAP) {
-                position = endPosition - OVERLAP;
-            }
             if (position >= text.length()) {
                 break;
             }
