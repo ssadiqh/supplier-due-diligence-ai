@@ -1,0 +1,53 @@
+{
+  "testResults": [
+    {
+      "testId": "SANC_EXACT_001",
+      "searchEntity": "IRGC QUDS Force",
+      "expectedAction": "BLOCK_PENDING_LEGAL",
+      "expectedConfidence": 1.0,
+      "reasoning": "Exact entity name match on sanctions list"
+    },
+    {
+      "testId": "SANC_PARTIAL_001",
+      "searchEntity": "Revolutionary Guards",
+      "expectedAction": "REQUEST_INFORMATION",
+      "expectedConfidence": 0.70,
+      "reasoning": "Partial name match - requires supplier clarification"
+    },
+    {
+      "testId": "SANC_TRANSLITER_001",
+      "searchEntity": "John Aleksander",
+      "expectedAction": "ESCALATE_TO_COMPLIANCE",
+      "expectedConfidence": 0.92,
+      "reasoning": "Transliteration variant detected - high confidence match"
+    },
+    {
+      "testId": "SANC_NAMESWAP_001",
+      "searchEntity": "Alexander John",
+      "expectedAction": "REQUEST_INFORMATION",
+      "expectedConfidence": 0.88,
+      "reasoning": "Name order swap - moderate confidence, request verification"
+    },
+    {
+      "testId": "SANC_FALSEPOSITIVE_001",
+      "searchEntity": "Acme Trading Inc",
+      "expectedAction": "PROCEED",
+      "expectedConfidence": 0.0,
+      "reasoning": "No match - unrelated entity (false positive test)"
+    },
+    {
+      "testId": "SANC_STRONG_001",
+      "searchEntity": "Bank of Commerce",
+      "expectedAction": "ESCALATE_TO_COMPLIANCE",
+      "expectedConfidence": 0.95,
+      "reasoning": "Strong match on Syria sanctions list"
+    },
+    {
+      "testId": "SANC_WEAK_001",
+      "searchEntity": "Commerce Bank",
+      "expectedAction": "REQUEST_INFORMATION",
+      "expectedConfidence": 0.82,
+      "reasoning": "Weak match - request supplier information"
+    }
+  ]
+}

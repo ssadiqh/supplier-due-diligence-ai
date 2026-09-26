@@ -1,0 +1,76 @@
+{
+  "fixtures": [
+    {
+      "id": "ABN_ACTIVE_001",
+      "request": {
+        "abn": "16009661901"
+      },
+      "response": {
+        "abn": "16009661901",
+        "businessName": "Qantas Airways Limited",
+        "businessStatus": "Active",
+        "found": true,
+        "entityType": "Australian Public Company",
+        "gstRegistration": "Yes"
+      },
+      "description": "Active company - Qantas Airways"
+    },
+    {
+      "id": "ABN_CANCELLED_001",
+      "request": {
+        "abn": "12345678901"
+      },
+      "response": {
+        "abn": "12345678901",
+        "businessName": "Defunct Company Pty Ltd",
+        "businessStatus": "Cancelled",
+        "found": true,
+        "cancelledDate": "2024-01-15"
+      },
+      "description": "Cancelled ABN - should trigger blocking rule"
+    },
+    {
+      "id": "ABN_NOT_FOUND_001",
+      "request": {
+        "abn": "99999999999"
+      },
+      "response": {
+        "abn": "99999999999",
+        "found": false,
+        "businessName": null,
+        "businessStatus": null
+      },
+      "description": "ABN not found in registry"
+    },
+    {
+      "id": "ABN_TRADING_NAME_001",
+      "request": {
+        "abn": "16009661901"
+      },
+      "response": {
+        "abn": "16009661901",
+        "businessName": "Qantas Airways Limited",
+        "businessStatus": "Active",
+        "found": true,
+        "businessNames": [
+          "Qantas Airways Limited",
+          "Qantas Airways",
+          "QF"
+        ]
+      },
+      "description": "Company with multiple registered business names"
+    },
+    {
+      "id": "ABN_SERVICE_ERROR_001",
+      "request": {
+        "abn": "16009661901"
+      },
+      "response": {
+        "error": "SERVICE_UNAVAILABLE",
+        "message": "ABN Lookup service temporarily unavailable",
+        "statusCode": 503
+      },
+      "description": "API service error - tests error handling"
+    }
+  ]
+}

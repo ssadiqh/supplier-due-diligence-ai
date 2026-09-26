@@ -1,0 +1,136 @@
+catalogueVersion: "1.0"
+releaseDate: "2026-09-26"
+effectiveFrom: "2026-09-26"
+jurisdiction: "AU"
+description: "Executable due-diligence rules derived from organisational policies"
+
+rules:
+  # ABN Validation Rules
+  - ruleId: "ABN_001"
+    name: "ABN Status Active"
+    description: "ABN must be active and registered"
+    condition: "abn.status != 'Active'"
+    severity: "BLOCKING"
+    outcome: "BLOCK_CASE"
+    policyReference: "counterparty-due-diligence-policy"
+    enabled: true
+    version: "1.0"
+
+  - ruleId: "ABN_002"
+    name: "ABN Found in Registry"
+    description: "ABN must be found in Australian Business Register"
+    condition: "abn.found == false"
+    severity: "BLOCKING"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "counterparty-due-diligence-policy"
+    enabled: true
+    version: "1.0"
+
+  # Insurance Rules
+  - ruleId: "INS_001"
+    name: "Insurance Current"
+    description: "Certificate of currency must not be expired"
+    condition: "insurance.daysUntilExpiry < 0"
+    severity: "HIGH"
+    outcome: "BLOCK_CASE"
+    policyReference: "insurance-requirements"
+    enabled: true
+    version: "1.0"
+
+  - ruleId: "INS_002"
+    name: "Insurance Expiring Soon"
+    description: "Insurance expiring within 30 days requires renewal request"
+    condition: "insurance.daysUntilExpiry <= 30 && insurance.daysUntilExpiry >= 0"
+    severity: "MEDIUM"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "insurance-requirements"
+    enabled: true
+    version: "1.0"
+
+  - ruleId: "INS_003"
+    name: "Minimum Insurance Coverage"
+    description: "Public liability insurance must meet minimum coverage"
+    condition: "insurance.publicLiability < 10000000"
+    severity: "HIGH"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "insurance-requirements"
+    enabled: true
+    version: "1.0"
+
+  # Modern Slavery Rules
+  - ruleId: "MS_001"
+    name: "Modern Slavery Assessment Required"
+    description: "Suppliers with >20 employees must provide modern slavery assessment"
+    condition: "supplier.employeeCount > 20 && modernSlaveryStatement.provided == false"
+    severity: "HIGH"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "modern-slavery-assessment-standard"
+    enabled: true
+    version: "1.0"
+
+  - ruleId: "MS_002"
+    name: "Modern Slavery Statement Current"
+    description: "Modern slavery statement must not be older than 12 months"
+    condition: "modernSlaveryStatement.ageMonths > 12"
+    severity: "MEDIUM"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "modern-slavery-assessment-standard"
+    enabled: true
+    version: "1.0"
+
+  # Required Documents
+  - ruleId: "DOC_001"
+    name: "All Required Documents Present"
+    description: "Supplier must provide all mandatory documents for their category"
+    condition: "requiredDocuments.missingCount > 0"
+    severity: "MEDIUM"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "required-evidence-matrix"
+    enabled: true
+    version: "1.0"
+
+  # Sanctions Screening
+  - ruleId: "SAN_001"
+    name: "No Strong Sanctions Match"
+    description: "Name matching sanctions list with >=95% confidence blocks case"
+    condition: "sanctions.strongMatch == true"
+    severity: "BLOCKING"
+    outcome: "ESCALATE_TO_LEGAL"
+    policyReference: "sanctions-screening-procedure"
+    enabled: true
+    version: "1.0"
+
+  - ruleId: "SAN_002"
+    name: "Moderate Sanctions Match Investigation"
+    description: "Name matching sanctions list with 85-94% confidence requires investigation"
+    condition: "sanctions.moderateMatch == true"
+    severity: "HIGH"
+    outcome: "REQUEST_INFORMATION"
+    policyReference: "sanctions-screening-procedure"
+    enabled: true
+    version: "1.0"
+
+outcomes:
+  BLOCK_CASE:
+    description: "Case cannot proceed; error must be resolved"
+    nextAction: "REQUEST_INFORMATION"
+    requiresApproval: true
+    escalationLevel: 0
+
+  REQUEST_INFORMATION:
+    description: "Case requires supplier to provide additional information"
+    nextAction: "RESUBMIT_CASE"
+    requiresApproval: false
+    escalationLevel: 1
+
+  ESCALATE_TO_LEGAL:
+    description: "Case must be reviewed by legal team"
+    nextAction: "LEGAL_REVIEW"
+    requiresApproval: true
+    escalationLevel: 2
+
+  REVIEW_REQUIRED:
+    description: "Case flagged for human review but can proceed with conditions"
+    nextAction: "CONDITIONAL_PROCEED"
+    requiresApproval: true
+    escalationLevel: 1

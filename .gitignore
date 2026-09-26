@@ -41,3 +41,6 @@ scratch/
 uploads/
 evidence/
 data/
+
+# Sample data is now committed to git (reproducible tests)
+# No exclusions needed

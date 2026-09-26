@@ -1,0 +1,8 @@
+entityName,entityType,country,listingReason,confidence_target,description
+"IRGC QUDS Force","ENTITY","Iran","UNSC Sanctions",1.0,"Exact match - exact entity name"
+"Revolutionary Guards",,"Iran","UNSC Sanctions",0.70,"Partial name match - requires investigation"
+"John Aleksander","PERSON","North Korea","UN Travel Ban",0.92,"Transliteration variant - Aleksander vs Alexander"
+"Alexander John","PERSON","North Korea","UN Travel Ban",0.88,"Name order swap - should flag for review"
+"Acme Trading Inc","ENTITY","USA","Unrelated",0.0,"False positive test - unrelated entity"
+"Bank of Commerce","ENTITY","Syria","Proliferation",0.95,"Strong match - similar name"
+"Commerce Bank","ENTITY","Syria","Proliferation",0.82,"Weak match - partial name"

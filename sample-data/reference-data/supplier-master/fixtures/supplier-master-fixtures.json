@@ -1,0 +1,74 @@
+{
+  "description": "Supplier Master test fixtures for entity resolution testing",
+  "fixtures": [
+    {
+      "id": "SUPP_001",
+      "abn": "16009661901",
+      "legalName": "Qantas Airways Limited",
+      "tradingNames": ["Qantas Airways", "QF"],
+      "status": "ACTIVE",
+      "registrationDate": "1920-01-01",
+      "lastVerified": "2026-09-01"
+    },
+    {
+      "id": "SUPP_002",
+      "abn": "16123456789",
+      "legalName": "Acme Corporation Pty Ltd",
+      "tradingNames": ["Acme Corp", "Acme"],
+      "status": "ACTIVE",
+      "registrationDate": "2015-06-15",
+      "lastVerified": "2026-08-15"
+    },
+    {
+      "id": "SUPP_003",
+      "abn": "16987654321",
+      "legalName": "Acme Technology Holdings Pty Ltd",
+      "tradingNames": ["Acme Tech", "ACT Holdings"],
+      "status": "ACTIVE",
+      "registrationDate": "2018-03-20",
+      "lastVerified": "2026-07-30",
+      "note": "Different entity from SUPP_002 despite similar name"
+    },
+    {
+      "id": "SUPP_004",
+      "abn": "16555555555",
+      "legalName": "Old Business Pty Ltd",
+      "tradingNames": ["Old Business"],
+      "status": "INACTIVE",
+      "registrationDate": "2010-01-01",
+      "deactivationDate": "2023-12-31",
+      "lastVerified": "2023-12-31"
+    }
+  ],
+  "testCases": {
+    "EXACT_ABN_DUPLICATE": {
+      "searchAbn": "16009661901",
+      "expectedMatch": "SUPP_001",
+      "confidence": 1.0,
+      "description": "Exact ABN match in Supplier Master"
+    },
+    "TRADING_NAME_VARIANT": {
+      "searchName": "Qantas",
+      "expectedMatch": "SUPP_001",
+      "confidence": 0.85,
+      "description": "Partial trading name match"
+    },
+    "SIMILAR_LEGAL_NAME": {
+      "searchName": "Acme Corp",
+      "expectedMatches": ["SUPP_002", "SUPP_003"],
+      "confidence": [0.95, 0.75],
+      "description": "Multiple similar names - requires investigation"
+    },
+    "INACTIVE_SUPPLIER": {
+      "searchAbn": "16555555555",
+      "expectedMatch": "SUPP_004",
+      "status": "INACTIVE",
+      "description": "Supplier exists but status is inactive"
+    },
+    "NO_MATCH": {
+      "searchAbn": "99999999999",
+      "expectedMatch": null,
+      "description": "No matching supplier in master"
+    }
+  }
+}

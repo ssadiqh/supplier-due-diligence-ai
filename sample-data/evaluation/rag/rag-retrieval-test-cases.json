@@ -1,0 +1,110 @@
+{
+  "description": "RAG retrieval evaluation test cases for policy corpus",
+  "testCases": [
+    {
+      "testId": "RAG_MS_001",
+      "question": "When is a modern slavery assessment required?",
+      "metadataFilters": {
+        "jurisdiction": "AU",
+        "status": "CURRENT"
+      },
+      "expectedDocuments": [
+        "modern-slavery-assessment-standard"
+      ],
+      "expectedSections": [
+        "Assessment triggers",
+        "Which suppliers require assessment"
+      ],
+      "mustNotAnswerWithoutEvidence": true,
+      "minimumRelevanceScore": 0.85
+    },
+    {
+      "testId": "RAG_INS_001",
+      "question": "What is the minimum public liability insurance coverage required?",
+      "metadataFilters": {
+        "jurisdiction": "AU",
+        "status": "CURRENT"
+      },
+      "expectedDocuments": [
+        "insurance-requirements"
+      ],
+      "expectedSections": [
+        "Public Liability Insurance",
+        "Minimum cover"
+      ],
+      "mustNotAnswerWithoutEvidence": true,
+      "minimumRelevanceScore": 0.85
+    },
+    {
+      "testId": "RAG_SAN_001",
+      "question": "How should we handle a weak sanctions match?",
+      "metadataFilters": {
+        "jurisdiction": "AU",
+        "status": "CURRENT"
+      },
+      "expectedDocuments": [
+        "sanctions-screening-procedure"
+      ],
+      "expectedSections": [
+        "Weak match",
+        "confidence thresholds"
+      ],
+      "mustNotAnswerWithoutEvidence": true,
+      "minimumRelevanceScore": 0.85
+    },
+    {
+      "testId": "RAG_DUE_001",
+      "question": "What are the mandatory due-diligence checks?",
+      "metadataFilters": {
+        "jurisdiction": "AU",
+        "status": "CURRENT"
+      },
+      "expectedDocuments": [
+        "counterparty-due-diligence-policy"
+      ],
+      "expectedSections": [
+        "Mandatory checks"
+      ],
+      "mustNotAnswerWithoutEvidence": true,
+      "minimumRelevanceScore": 0.85,
+      "noteInternalPolicyPriority": "Internal policies should take priority over public guidance for this query"
+    },
+    {
+      "testId": "RAG_FOREIGN_BRIBERY_001",
+      "question": "What is foreign bribery and how do we assess it?",
+      "expectedDocuments": [
+        "foreign-bribery-guidance"
+      ],
+      "expectedSections": [
+        "Definition",
+        "Assessment",
+        "Red flags"
+      ],
+      "mustNotAnswerWithoutEvidence": true,
+      "relevanceScore": 0.90,
+      "noteReleaseStatus": "Release 2 - defer until core workflow is complete"
+    },
+    {
+      "testId": "RAG_EVIDENCE_MATRIX_001",
+      "question": "What documents are required for a high-value supplier?",
+      "metadataFilters": {
+        "documentType": "INTERNAL_POLICY"
+      },
+      "expectedDocuments": [
+        "required-evidence-matrix"
+      ],
+      "expectedSections": [
+        "High-Value Supplier"
+      ],
+      "mustNotAnswerWithoutEvidence": true,
+      "minimumRelevanceScore": 0.85
+    }
+  ],
+  "evaluationMetrics": {
+    "precision": "Fraction of retrieved documents that are relevant",
+    "recall": "Fraction of relevant documents that are retrieved",
+    "relevanceScore": "Semantic similarity between query and retrieved content (0-1)",
+    "citationAccuracy": "Whether retrieved chunks contain the actual answer",
+    "authorityRanking": "Internal policies ranked higher than public guidance"
+  }
+}
