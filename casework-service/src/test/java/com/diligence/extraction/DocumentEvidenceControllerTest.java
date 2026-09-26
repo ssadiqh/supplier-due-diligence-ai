@@ -10,16 +10,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,6 +43,9 @@ class DocumentEvidenceControllerTest {
     @Autowired
     private ExtractionResultRepository extractionResultRepository;
 
+    @MockBean
+    private DocumentParser documentParser;
+
     private UUID testCaseId;
     private UUID testDocumentId;
 
@@ -55,12 +62,23 @@ class DocumentEvidenceControllerTest {
         testCaseId = savedCase.getId();
 
         // Create test document
+        File testFile = createTestPdfFile();
         Document testDoc = new Document();
         testDoc.setCaseEntity(savedCase);
         testDoc.setFileName("test-document.pdf");
-        testDoc.setFilePath(createTestPdfFile().getAbsolutePath());
+        testDoc.setFileType("application/pdf");
+        testDoc.setFileSize(testFile.length());
+        testDoc.setFilePath(testFile.getAbsolutePath());
+        testDoc.setUploadedBy("test-user");
         Document savedDoc = documentRepository.save(testDoc);
         testDocumentId = savedDoc.getId();
+
+        // Mock document parser to return test chunks
+        List<PageChunk> mockChunks = List.of(
+            new PageChunk(1, "Test company text for extraction", 0, 30),
+            new PageChunk(1, "with multiple chunks for processing", 30, 65)
+        );
+        when(documentParser.parseDocument(any(File.class))).thenReturn(mockChunks);
     }
 
     @Test

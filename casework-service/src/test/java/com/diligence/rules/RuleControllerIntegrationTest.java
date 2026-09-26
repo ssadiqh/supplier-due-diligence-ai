@@ -3,6 +3,7 @@ package com.diligence.rules;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.diligence.casework.CaseRepository;
 import com.diligence.casework.DueDiligenceCase;
+import com.diligence.extraction.ExtractionResultRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,11 +38,15 @@ class RuleControllerIntegrationTest {
     @Autowired
     private CaseRepository caseRepository;
 
+    @Autowired
+    private ExtractionResultRepository extractionResultRepository;
+
     private UUID caseId;
     private UUID ruleId;
 
     @BeforeEach
     void setUp() {
+        extractionResultRepository.deleteAll();
         ruleResultRepository.deleteAll();
         ruleRepository.deleteAll();
         caseRepository.deleteAll();

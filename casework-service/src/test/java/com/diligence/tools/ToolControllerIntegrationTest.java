@@ -2,6 +2,7 @@ package com.diligence.tools;
 
 import com.diligence.casework.CaseRepository;
 import com.diligence.casework.DueDiligenceCase;
+import com.diligence.extraction.ExtractionResultRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,10 +30,14 @@ class ToolControllerIntegrationTest {
     @Autowired
     private ToolResultRepository toolResultRepository;
 
+    @Autowired
+    private ExtractionResultRepository extractionResultRepository;
+
     private UUID caseId;
 
     @BeforeEach
     void setUp() {
+        extractionResultRepository.deleteAll();
         toolResultRepository.deleteAll();
         caseRepository.deleteAll();
 

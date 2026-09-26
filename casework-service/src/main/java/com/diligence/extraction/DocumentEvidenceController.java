@@ -45,27 +45,36 @@ public class DocumentEvidenceController {
         logger.info("Extracting evidence from document {} for case {}", documentId, caseId);
 
         // Verify case exists
-        DueDiligenceCase caseEntity = caseRepository.findById(caseId)
-            .orElseThrow(() -> new IllegalArgumentException("Case not found: " + caseId));
-
-        // Verify document exists and belongs to case
-        Document document = documentRepository.findById(documentId)
-            .orElseThrow(() -> new IllegalArgumentException("Document not found: " + documentId));
-
-        if (!document.getCaseEntity().getId().equals(caseId)) {
-            throw new IllegalArgumentException("Document does not belong to this case");
+        var caseEntity = caseRepository.findById(caseId);
+        if (caseEntity.isEmpty()) {
+            logger.error("Case not found: {}", caseId);
+            return ResponseEntity.badRequest().build();
         }
 
-        // Get document file path
-        File documentFile = new File(document.getFilePath());
+        // Verify document exists
+        var document = documentRepository.findById(documentId);
+        if (document.isEmpty()) {
+            logger.error("Document not found: {}", documentId);
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Verify document belongs to case
+        if (!document.get().getCaseEntity().getId().equals(caseId)) {
+            logger.error("Document {} does not belong to case {}", documentId, caseId);
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Verify file exists
+        File documentFile = new File(document.get().getFilePath());
         if (!documentFile.exists()) {
-            throw new IllegalArgumentException("Document file not found: " + document.getFilePath());
+            logger.error("Document file not found: {}", document.get().getFilePath());
+            return ResponseEntity.badRequest().build();
         }
 
         // Extract evidence
         ExtractionResult result = evidenceAgent.extractSupplierEvidence(caseId, documentId, documentFile);
-        result.setCaseEntity(caseEntity);
-        result.setDocumentEntity(document);
+        result.setCaseEntity(caseEntity.get());
+        result.setDocumentEntity(document.get());
 
         // Save result
         ExtractionResult savedResult = extractionResultRepository.save(result);
