@@ -98,7 +98,7 @@ public class DocumentEvidenceController {
 
         logger.info("Fetching successful extraction results for case {}", caseId);
 
-        List<ExtractionResult> results = extractionResultRepository.findByCaseIdAndSuccess(caseId, true);
+        List<ExtractionResult> results = extractionResultRepository.findByCaseIdAndSuccess(caseId, Boolean.TRUE);
 
         return ResponseEntity.ok(results);
     }
