@@ -1,5 +1,7 @@
 # Sample Data Directory
 
+**Purpose:** Production-ready test data, policy corpus, and evaluation infrastructure for the Australian supplier due-diligence AI system. Enables reproducible testing of ABN validation, sanctions screening, entity resolution, and policy-driven decision rules without external dependencies.
+
 **Status:** 🟡 75% COMPLETE → 85% AFTER REORGANIZATION
 
 Public source corpus assembled. Infrastructure (fixtures, expected results, manifests) now in place. Still need: complete internal policies, test scenarios, expected results for scenarios.
@@ -11,14 +13,14 @@ Public source corpus assembled. Infrastructure (fixtures, expected results, mani
 ```
 sample-data/
 ├── policies/                    Authority hierarchy for governance
-│   ├── public/                  Australian government guidance (6 PDFs)
-│   └── internal/                Organizational rules (5 templates + 3 missing)
+│   ├── public/                  Australian government guidance (6 PDFs) - source of truth for policy extraction
+│   └── internal/                Organizational rules (5 templates + 3 missing) - AI decision boundaries
 │
-├── reference-data/              Deterministic screening data (NOT RAG)
+├── reference-data/              Deterministic screening data (NOT RAG) - external APIs and master records
 │   ├── sanctions/
 │   │   ├── raw/                 DFAT Consolidated List (monthly refresh)
-│   │   ├── fixtures/            Stable test cases (exact, partial, false-positive)
-│   │   └── expected/            Known-good screening results (JSON)
+│   │   ├── fixtures/            Stable test cases (exact, partial, false-positive) - unit test mocks
+│   │   └── expected/            Known-good screening results (JSON) - test assertions
 │   ├── abn-lookup/
 │   │   ├── fixtures/            API test responses (active, cancelled, error)
 │   │   └── expected/            Expected validation results (JSON)
@@ -26,17 +28,17 @@ sample-data/
 │       ├── fixtures/            Test records (duplicate, variant, inactive)
 │       └── expected/            Entity resolution results (JSON)
 │
-├── rules/                       Executable rule definitions
+├── rules/                       Executable rule definitions - implements policies as code
 │   └── due-diligence-rule-catalogue.yaml
 │
 ├── document-templates/          Empty templates for assessment forms
 │   └── modern-slavery-supplier-questionnaire.docx
 │
-├── public-examples/             Real public documents for testing
+├── public-examples/             Real public documents for testing - authentic examples from government
 │   ├── asic/                    Official ASIC extracts
 │   └── modern-slavery/          Real Modern Slavery Statement
 │
-├── scenarios/                   Complete end-to-end test cases
+├── scenarios/                   Complete end-to-end test cases - full supplier journeys
 │   ├── synthetic-benign/        Low-risk scenario (inputs + expected)
 │   ├── synthetic-risk/          High-risk scenario (inputs + expected)
 │   └── adversarial/             Security tests (OCR, injection, corruption)
@@ -45,9 +47,22 @@ sample-data/
 │   ├── source-documents.yaml    URLs, versions, SHA-256
 │   └── dataset-version.yaml     Changelog and status
 │
-└── evaluation/                  Test cases for agent evaluation
+└── evaluation/                  Test cases for agent evaluation - precision/recall measurement
     └── rag/                     RAG retrieval test queries and metrics
 ```
+
+---
+
+## 🎯 What Each Section Does
+
+| Section | Purpose | Contains |
+|---------|---------|----------|
+| **policies/** | AI policy boundaries and public guidance | Government PDFs + organizational policy templates |
+| **reference-data/** | Deterministic lookups (no AI) | Sanctions lists, ABN API test mocks, entity records |
+| **rules/** | Executable policy rules | YAML rule catalogue (10 rules from policies) |
+| **evaluation/** | Measure RAG accuracy | 6 test queries with expected document retrieval |
+| **scenarios/** | Test full workflows | Complete supplier cases (benign + risky) |
+| **public-examples/** | Real-world evidence | Actual ASIC extracts and statements |
 
 ---
 
