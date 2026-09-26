@@ -55,6 +55,32 @@ public class DueDiligenceCase {
         this.createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Transition case to new status, enforcing valid state machine transitions
+     * @param newStatus Target status
+     * @throws IllegalStateException if transition is not allowed
+     */
+    public void transitionStatus(CaseStatus newStatus) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException("Target status cannot be null");
+        }
+
+        if (!this.status.canTransitionTo(newStatus)) {
+            throw new IllegalStateException(
+                "Cannot transition from " + this.status + " to " + newStatus + ". " +
+                "Allowed transitions: " + this.status.getAllowedTransitionsDescription()
+            );
+        }
+
+        this.status = newStatus;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Direct status setter (deprecated - use transitionStatus for state validation)
+     * Kept for backward compatibility with tests, but should use transitionStatus
+     */
+    @Deprecated(forRemoval = false, since = "Phase 2")
     public void setStatus(CaseStatus status) {
         this.status = status;
         this.updatedAt = LocalDateTime.now();
