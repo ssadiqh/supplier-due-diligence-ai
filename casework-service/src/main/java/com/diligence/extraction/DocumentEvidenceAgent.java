@@ -1,18 +1,13 @@
 package com.diligence.extraction;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +24,11 @@ public class DocumentEvidenceAgent {
     private final ObjectMapper objectMapper;
     private final Optional<ChatModel> chatModel;
 
-    public DocumentEvidenceAgent(DocumentParser documentParser, ObjectMapper objectMapper, Optional<ChatModel> chatModel) {
+    public DocumentEvidenceAgent(
+        DocumentParser documentParser,
+        ObjectMapper objectMapper,
+        Optional<ChatModel> chatModel
+    ) {
         this.documentParser = documentParser;
         this.objectMapper = objectMapper;
         this.chatModel = chatModel;
@@ -37,167 +36,125 @@ public class DocumentEvidenceAgent {
 
     public ExtractionResult extractSupplierEvidence(UUID caseId, UUID documentId, File documentFile) {
         try {
-            // Step 1: Load and parse document
             List<PageChunk> chunks = documentParser.parseDocument(documentFile);
 
             if (chunks.isEmpty()) {
-                logger.warn("Document {} has no extractable text", documentId);
-                return createErrorResult(caseId, documentId, "No text found in document", documentFile.getName());
+                return errorResult(caseId, documentId, "No text found in document");
             }
 
-            logger.info("Parsed document {} into {} chunks", documentId, chunks.size());
-
-            // Step 2: Check if LLM is configured
-            if (!chatModel.isPresent()) {
-                logger.info("LLM not configured for document {}. Returning NOT_CONFIGURED status.", documentId);
-                return createNotConfiguredResult(caseId, documentId, chunks.size(), documentFile.getName());
+            if (chatModel.isEmpty()) {
+                return notConfiguredResult(caseId, documentId, chunks.size());
             }
 
-            // Step 3: Call LLM (Claude via Spring AI)
-            String chunksText = formatChunksForPrompt(chunks);
-            SupplierFactsOutput factsOutput = extractFactsFromDocument(chunksText);
+            String chunksText = chunks.stream()
+                .map(c -> String.format("[Page %d]\n%s", c.getPageNumber(), c.getText()))
+                .collect(Collectors.joining("\n\n"));
 
-            if (factsOutput == null) {
-                return createErrorResult(caseId, documentId, "LLM extraction failed", documentFile.getName());
+            SupplierFactsOutput facts = extractViaLLM(chunksText);
+            if (facts == null) {
+                return errorResult(caseId, documentId, "LLM extraction failed");
             }
 
-            logger.debug("Extracted {} facts from document {}", factsOutput.getFacts().size(), documentId);
-
-            // Step 4: Build evidence string
-            String evidence = buildEvidenceString(factsOutput);
-
-            // Step 5: Save result (only mark as success when real extraction occurred)
             ExtractionResult result = new ExtractionResult();
             result.setToolName("DOCUMENT_EXTRACTION");
             result.setToolType("EVIDENCE_EXTRACTION");
+            result.setSuccess(true);
+            result.setModelUsed("claude-3-5-sonnet-20241022");
+            result.setTokensUsed((int) (chunksText.length() / 4.0));
+            result.setPromptVersion(PROMPT_VERSION);
+            result.setEvidence(buildEvidence(facts));
             result.setInput(objectMapper.writeValueAsString(Map.of(
                 "documentId", documentId.toString(),
-                "documentName", documentFile.getName(),
-                "chunkCount", chunks.size()
+                "documentName", documentFile.getName()
             )));
-            result.setOutput(objectMapper.writeValueAsString(factsOutput));
-            result.setSuccess(true);
-            result.setEvidence(evidence);
-            result.setPromptVersion(PROMPT_VERSION);
-            result.setModelUsed("claude-3-5-sonnet-20241022");
-            result.setTokensUsed(estimateTokens(chunksText));
+            result.setOutput(objectMapper.writeValueAsString(facts));
 
-            logger.info("Successfully extracted facts from document {}: {} facts found", documentId, factsOutput.getFacts().size());
-
+            logger.info("Extracted facts from document {}: {} facts", documentId, facts.getFacts().size());
             return result;
 
         } catch (Exception e) {
-            logger.error("Error extracting evidence from document {}: {}", documentId, e.getMessage(), e);
-            return createErrorResult(caseId, documentId, e.getMessage(), documentFile.getName());
+            logger.error("Error extracting evidence from {}: {}", documentId, e.getMessage(), e);
+            return errorResult(caseId, documentId, e.getMessage());
         }
     }
 
-    private SupplierFactsOutput extractFactsFromDocument(String documentText) {
+    private SupplierFactsOutput extractViaLLM(String documentText) {
         try {
-            if (chatModel.isEmpty()) {
-                return null;
-            }
-
-            String systemPrompt = loadPromptTemplate();
-            String userPrompt = "Extract supplier facts from these document chunks:\n\n" + documentText;
-
-            PromptTemplate template = new PromptTemplate("Extract supplier facts from these document chunks:\n\n{text}");
+            PromptTemplate template = new PromptTemplate(
+                "Extract supplier facts from this document:\n\n{text}"
+            );
             Prompt prompt = template.create(Map.of("text", documentText));
 
-            String response = chatModel.get().call(prompt).getResult().getOutput().getText();
+            String response = chatModel.get()
+                .call(prompt)
+                .getResult()
+                .getOutput()
+                .getText();
 
-            SupplierFactsOutput output = objectMapper.readValue(response, SupplierFactsOutput.class);
-            return output;
+            return objectMapper.readValue(response, SupplierFactsOutput.class);
 
         } catch (Exception e) {
-            logger.error("Error extracting facts from document: {}", e.getMessage(), e);
+            logger.error("LLM extraction failed: {}", e.getMessage());
             return null;
         }
     }
 
-    private String loadPromptTemplate() throws IOException {
-        ClassPathResource resource = new ClassPathResource("prompts/supplier_extraction_v1.txt");
-        return new String(Files.readAllBytes(resource.getFile().toPath()), StandardCharsets.UTF_8);
-    }
-
-    private String formatChunksForPrompt(List<PageChunk> chunks) {
-        return chunks.stream()
-            .map(chunk -> String.format("[Page %d]\n%s", chunk.getPageNumber(), chunk.getText()))
-            .collect(Collectors.joining("\n\n"));
-    }
-
-    private String buildEvidenceString(SupplierFactsOutput output) {
-        if (output.getFacts() == null || output.getFacts().isEmpty()) {
-            return output.getSummary();
+    private String buildEvidence(SupplierFactsOutput facts) {
+        if (facts.getFacts() == null || facts.getFacts().isEmpty()) {
+            return facts.getSummary();
         }
 
-        StringBuilder evidence = new StringBuilder();
-        evidence.append(output.getSummary()).append("\n\n");
-        evidence.append("Extracted facts:\n");
-
-        for (SupplierFact fact : output.getFacts()) {
-            evidence.append(String.format("- %s: %s (confidence: %.0f%%, pages: %s)\n",
+        StringBuilder sb = new StringBuilder(facts.getSummary()).append("\n\nExtracted facts:\n");
+        for (SupplierFact fact : facts.getFacts()) {
+            sb.append(String.format("- %s: %s (confidence: %.0f%%, pages: %s)\n",
                 fact.getCategory(),
                 fact.getValue(),
                 fact.getConfidence() * 100,
                 fact.getPages()
             ));
         }
-
-        return evidence.toString();
+        return sb.toString();
     }
 
-    private ExtractionResult createErrorResult(UUID caseId, UUID documentId, String errorMessage, String documentName) {
+    private ExtractionResult errorResult(UUID caseId, UUID documentId, String error) {
         ExtractionResult result = new ExtractionResult();
         result.setToolName("DOCUMENT_EXTRACTION");
         result.setToolType("EVIDENCE_EXTRACTION");
         result.setSuccess(false);
-        result.setErrorMessage(errorMessage);
+        result.setErrorMessage(error);
         result.setPromptVersion(PROMPT_VERSION);
-        result.setModelUsed(null);
-        result.setTokensUsed(null);
-
         try {
             result.setInput(objectMapper.writeValueAsString(Map.of(
-                "documentId", documentId.toString(),
-                "documentName", documentName
+                "documentId", documentId.toString()
             )));
-        } catch (JsonProcessingException e) {
-            logger.error("Error writing input JSON: {}", e.getMessage());
+            result.setOutput(objectMapper.writeValueAsString(Map.of(
+                "status", "error"
+            )));
+        } catch (Exception e) {
+            logger.error("Error serializing result: {}", e.getMessage());
         }
-
         return result;
     }
 
-    private ExtractionResult createNotConfiguredResult(UUID caseId, UUID documentId, int chunkCount, String documentName) {
+    private ExtractionResult notConfiguredResult(UUID caseId, UUID documentId, int chunkCount) {
         ExtractionResult result = new ExtractionResult();
         result.setToolName("DOCUMENT_EXTRACTION");
         result.setToolType("EVIDENCE_EXTRACTION");
         result.setSuccess(false);
-        result.setErrorMessage("NOT_CONFIGURED: LLM extraction not available. Configure ANTHROPIC_API_KEY and spring.ai.anthropic.api-key to enable.");
+        result.setErrorMessage("NOT_CONFIGURED: LLM extraction not available. Configure ANTHROPIC_API_KEY to enable.");
         result.setPromptVersion(PROMPT_VERSION);
-        result.setModelUsed(null);
-        result.setTokensUsed(null);
         result.setEvidence("Document parsed into " + chunkCount + " chunks. Ready for extraction once LLM is configured.");
-
         try {
             result.setInput(objectMapper.writeValueAsString(Map.of(
                 "documentId", documentId.toString(),
-                "documentName", documentName,
                 "chunkCount", chunkCount
             )));
             result.setOutput(objectMapper.writeValueAsString(Map.of(
-                "status", "NOT_CONFIGURED",
-                "message", "LLM extraction not available"
+                "status", "not_configured"
             )));
-        } catch (JsonProcessingException e) {
-            logger.error("Error writing JSON: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error serializing result: {}", e.getMessage());
         }
-
         return result;
-    }
-
-    private int estimateTokens(String text) {
-        return (int) (text.length() / 4.0);
     }
 }
