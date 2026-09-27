@@ -15,16 +15,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class DocumentEvidenceAgent {
+public class DocumentExtractionService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DocumentEvidenceAgent.class);
+    private static final Logger logger = LoggerFactory.getLogger(DocumentExtractionService.class);
     private static final String PROMPT_VERSION = "v1";
 
     private final DocumentParser documentParser;
     private final ObjectMapper objectMapper;
     private final Optional<ChatModel> chatModel;
 
-    public DocumentEvidenceAgent(
+    public DocumentExtractionService(
         DocumentParser documentParser,
         ObjectMapper objectMapper,
         Optional<ChatModel> chatModel

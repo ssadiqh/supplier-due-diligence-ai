@@ -21,17 +21,17 @@ public class DocumentEvidenceController {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentEvidenceController.class);
 
-    private final DocumentEvidenceAgent evidenceAgent;
+    private final DocumentExtractionService extractionService;
     private final ExtractionResultRepository extractionResultRepository;
     private final CaseRepository caseRepository;
     private final DocumentRepository documentRepository;
 
     public DocumentEvidenceController(
-            DocumentEvidenceAgent evidenceAgent,
+            DocumentExtractionService extractionService,
             ExtractionResultRepository extractionResultRepository,
             CaseRepository caseRepository,
             DocumentRepository documentRepository) {
-        this.evidenceAgent = evidenceAgent;
+        this.extractionService = extractionService;
         this.extractionResultRepository = extractionResultRepository;
         this.caseRepository = caseRepository;
         this.documentRepository = documentRepository;
@@ -72,7 +72,7 @@ public class DocumentEvidenceController {
         }
 
         // Extract evidence
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(caseId, documentId, documentFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(caseId, documentId, documentFile);
         result.setCaseEntity(caseEntity.get());
         result.setDocumentEntity(document.get());
 

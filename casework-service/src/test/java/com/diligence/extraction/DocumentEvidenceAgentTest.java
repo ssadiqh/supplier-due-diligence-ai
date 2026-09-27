@@ -15,10 +15,10 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@DisplayName("Document Evidence Agent Unit Tests")
+@DisplayName("Document Extraction Service Unit Tests")
 class DocumentEvidenceAgentTest {
 
-    private DocumentEvidenceAgent evidenceAgent;
+    private DocumentExtractionService extractionService;
 
     @Mock
     private DocumentParser mockDocumentParser;
@@ -32,7 +32,7 @@ class DocumentEvidenceAgentTest {
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-        evidenceAgent = new DocumentEvidenceAgent(mockDocumentParser, objectMapper, java.util.Optional.ofNullable(null));
+        extractionService = new DocumentExtractionService(mockDocumentParser, objectMapper, java.util.Optional.ofNullable(null));
         testCaseId = UUID.randomUUID();
         testDocumentId = UUID.randomUUID();
         testFile = Files.createTempFile("test-", ".pdf").toFile();
@@ -45,7 +45,7 @@ class DocumentEvidenceAgentTest {
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(List.of());
 
         // WHEN: Extract evidence
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Result should be error
         assertNotNull(result, "Result should not be null");
@@ -61,7 +61,7 @@ class DocumentEvidenceAgentTest {
             .thenThrow(new RuntimeException("PDF parsing failed"));
 
         // WHEN: Extract evidence
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Should return error result, not throw exception
         assertNotNull(result, "Result should not be null");
@@ -79,7 +79,7 @@ class DocumentEvidenceAgentTest {
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
         // WHEN: Extract evidence (without LLM configured)
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Result should have all required fields
         assertNotNull(result, "Result should not be null");
@@ -108,7 +108,7 @@ class DocumentEvidenceAgentTest {
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
         // WHEN: Extract evidence (without LLM configured)
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Should indicate NOT_CONFIGURED
         assertFalse(result.getSuccess());
@@ -129,7 +129,7 @@ class DocumentEvidenceAgentTest {
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
         // WHEN: Extract evidence (without LLM configured)
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Should process all pages but return NOT_CONFIGURED
         assertFalse(result.getSuccess(), "Should be NOT_CONFIGURED");
@@ -146,7 +146,7 @@ class DocumentEvidenceAgentTest {
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
         // WHEN: Extract evidence without LLM configured
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Tool metadata should be correct
         assertEquals("DOCUMENT_EXTRACTION", result.getToolName());
@@ -167,7 +167,7 @@ class DocumentEvidenceAgentTest {
         when(mockDocumentParser.parseDocument(testFile)).thenReturn(mockChunks);
 
         // WHEN: Extract evidence without LLM configured
-        ExtractionResult result = evidenceAgent.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
+        ExtractionResult result = extractionService.extractSupplierEvidence(testCaseId, testDocumentId, testFile);
 
         // THEN: Evidence should contain configuration message
         assertFalse(result.getSuccess());
