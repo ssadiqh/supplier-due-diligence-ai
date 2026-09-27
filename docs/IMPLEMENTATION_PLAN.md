@@ -51,13 +51,23 @@ Phased learning-first approach starting with REST API, progressing through tools
 - **Learning:** External APIs, tool calling patterns, timeouts and retries
 - **Status:** 6 tests passing (3 unit, 3 integration), committed to repository
 
-### Phase 5: Document Evidence Agent (5-7 days)
-- **Goal:** Use Spring AI to extract structured facts from PDFs
-- **Tech:** PDF parsing, Spring AI ChatClient, tool calling, prompt versioning
-- **Deliverable:** Extract supplier facts with page references and confidence
-- **Learning:** LLM tool calling, evidence grounding, prompt design
+- **Phase 5:** 🔄 IN PROGRESS (Checkpoint Phase)
+  - Document evidence agent foundation with Spring AI integration
+  - PDF text extraction with 500-char chunks and 50-char overlap (DocumentParser)
+  - Case ownership enforcement for document access/deletion
+  - ABN validation with ISO/IEC 7064 mod 10-13 checksum (Phase 3)
+  - Rules engine with 6-state RuleOutcome enum (PASS/FAIL/ERROR/NOT_EVALUATED/NOT_APPLICABLE/UNAVAILABLE)
+  - Document upload with filename sanitization and streaming
+  - Integration tests with real PDF fixtures
+  - Status: 8 code review issues fixed (Issues 1-5 complete + Issues 6-8 complete)
+  - 47 tests passing (all suites)
+  - Remaining: Spring AI ChatClient configuration for actual LLM extraction
+  - Package: com.diligence.extraction (DocumentParser, DocumentEvidenceAgent)
+  - Configuration: application.yml with PDF and Spring AI settings
 
-**Checkpoint:** First working vertical slice complete. Can upload PDF → extract evidence → validate ABN → apply rules → review.
+**Checkpoint:** Foundation vertical slice ready. Infrastructure solid:
+- Upload PDF → extract text & chunk → validate supplier (ABN) → apply rules → persist findings
+- Next: Wire Spring AI ChatClient to complete LLM extraction capability
 
 ### Phase 6: MCP Server & Governance (4 days)
 - **Goal:** Expose tools through Model Context Protocol; add access control

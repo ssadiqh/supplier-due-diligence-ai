@@ -2,19 +2,24 @@
 
 A learning-first implementation of an enterprise-grade AI system for Australian supplier onboarding and counterparty due-diligence.
 
-## Phase 1-4: Case API, Documents, Rules & Tool Integration ✓
+## Phase 1-5: Case API, Documents, Rules, Tool Integration & Evidence Foundation ✓
 
-Foundation complete. Create cases, upload documents, evaluate business rules, verify suppliers via ABN lookup.
+Foundation complete. Create cases, upload documents, evaluate business rules, verify suppliers via ABN lookup, extract evidence from PDFs.
 
 ### What's Implemented
 
-- **Spring Boot Application:** RESTful API for case, document, and rule management
-- **PostgreSQL Persistence:** Cases with document and rule result relationships
+- **Spring Boot Application:** RESTful API for case, document, rule, and tool management
+- **PostgreSQL Persistence:** Cases with document, rule result, and tool result relationships
 - **Project Lombok:** Reduced boilerplate (getters, setters, constructors auto-generated)
-- **Flyway Migrations:** Database versioning (V1 cases, V2 documents, V3 rules)
-- **Deterministic Rules Engine:** Business logic evaluation without AI
+- **Flyway Migrations:** Database versioning (V1-V4 schemas)
+- **Deterministic Rules Engine:** 8 rule types with 6-state RuleOutcome (PASS/FAIL/ERROR/NOT_EVALUATED/NOT_APPLICABLE/UNAVAILABLE)
+- **Document Parsing:** PDF text extraction with configurable chunking (500-char chunks, 50-char overlap)
+- **Filename Sanitization:** Path traversal protection for uploaded files
+- **File Streaming:** Memory-efficient upload handling (Files.copy, not getBytes())
+- **Case Ownership Enforcement:** Document access/deletion verified against case ownership
+- **ABN Validation:** ISO/IEC 7064 mod 10-13 checksum validation
 - **H2 In-Memory Testing:** Fast, isolated integration tests (no Docker required)
-- **Unit & Integration Tests:** 26/26 tests passing (3 Phase 1 + 3 Phase 2 + 4 Phase 3 + 6 Phase 4, 8 integration tests across phases)
+- **Unit & Integration Tests:** 47/47 tests passing (all test suites)
 
 ### Quick Start
 
@@ -182,20 +187,24 @@ casework-service/
   pom.xml
 ```
 
-### What's Next (Phase 5)
+### What's Next (Phase 5 - LLM Integration)
 
-- Document evidence extraction using Spring AI
-- PDF text parsing and structured fact extraction
-- LLM tool calling and prompt design
-- Evidence grounding with page references
+**Checkpoint:** Evidence extraction foundation ready. PDF parsing, chunking, and rule validation all working.
+
+Remaining work:
+- Wire Spring AI ChatClient for LLM-based fact extraction
+- Implement structured output deserialization for extracted entities
+- Add evidence grounding with page references and confidence scores
+- Integration with document evidence agent for end-to-end flow
 
 ### Notes
 
-- **No LLM AI yet.** Phases 1-4 focus on deterministic logic, API patterns, and tool calling infrastructure.
-- **Tests are comprehensive.** Run `mvn test` to verify everything works (26/26 passing).
+- **Foundation first.** Phases 1-5 build deterministic infrastructure before agents use LLM.
+- **Tests are comprehensive.** Run `mvn test` to verify everything works (47/47 passing).
 - **Database is PostgreSQL.** Local dev uses Docker; H2 for testing.
 - **Flyway manages migrations.** Each schema change is versioned and tracked (V1-V4).
 - **Tool calling ready.** Phase 4 demonstrates external API integration pattern for future agents.
+- **PDF handling optimized.** Streaming, chunking, and path sanitization built in Phase 5.
 
 ---
 
