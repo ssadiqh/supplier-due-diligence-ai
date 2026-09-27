@@ -102,21 +102,21 @@ class RuleControllerIntegrationTest {
     @Test
     @DisplayName("Should evaluate all rules for a case")
     void testEvaluateAllRules() throws Exception {
-        mockMvc.perform(post("/api/rules/api/cases/" + caseId + "/evaluate-rules"))
+        mockMvc.perform(post("/api/cases/" + caseId + "/rule-evaluations"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].passed").value(true));
+                .andExpect(jsonPath("$[0].outcome").value("NOT_EVALUATED"));
     }
 
     @Test
     @DisplayName("Should get rule results for a case")
     void testGetRuleResults() throws Exception {
         // First evaluate rules
-        mockMvc.perform(post("/api/rules/api/cases/" + caseId + "/evaluate-rules"))
+        mockMvc.perform(post("/api/cases/" + caseId + "/rule-evaluations"))
                 .andExpect(status().isOk());
 
         // Then retrieve results
-        mockMvc.perform(get("/api/rules/api/cases/" + caseId + "/rule-results"))
+        mockMvc.perform(get("/api/cases/" + caseId + "/rule-results"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].rule.name").value("Test Rule"));

@@ -78,20 +78,20 @@ class RuleServiceTest {
         RuleResult result = ruleService.evaluateRule(caseId, ruleId, "ABN valid", "ABN check passed");
 
         assertNotNull(result);
-        assertEquals(RuleOutcome.PASS, result.getOutcome());
-        assertTrue(result.isPassed());
+        // ABN validation now returns NOT_EVALUATED (awaits tool result from SupplierVerificationService)
+        assertEquals(RuleOutcome.NOT_EVALUATED, result.getOutcome());
         assertEquals(ruleId, result.getRule().getId());
     }
 
     @Test
-    @DisplayName("Should fail ABN validation for invalid ABN")
+    @DisplayName("Should return NOT_APPLICABLE for ABN validation when ABN missing")
     void testAbnValidationFails() {
         UUID caseId = UUID.randomUUID();
         UUID ruleId = UUID.randomUUID();
 
         DueDiligenceCase caseEntity = new DueDiligenceCase("Test Corp", "analyst@example.com");
         caseEntity.setId(caseId);
-        caseEntity.setSupplierAbn("123");  // Invalid ABN (too short)
+        caseEntity.setSupplierAbn(null);  // No ABN provided
 
         Rule rule = new Rule("ABN Validation", "Validate ABN", RuleType.ABN_VALIDATION, RuleSeverity.HIGH);
         rule.setId(ruleId);
@@ -104,11 +104,11 @@ class RuleServiceTest {
             return result;
         });
 
-        RuleResult result = ruleService.evaluateRule(caseId, ruleId, "ABN invalid", "ABN check failed");
+        RuleResult result = ruleService.evaluateRule(caseId, ruleId, "ABN not provided", "ABN check not applicable");
 
         assertNotNull(result);
-        assertEquals(RuleOutcome.FAIL, result.getOutcome());
-        assertTrue(result.isFailed());
+        // ABN validation returns NOT_APPLICABLE when no ABN is provided
+        assertEquals(RuleOutcome.NOT_APPLICABLE, result.getOutcome());
     }
 
     @Test
