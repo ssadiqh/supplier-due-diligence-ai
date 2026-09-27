@@ -117,10 +117,15 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Spring AI for LLM integration (Phase 5.5 - Future)
+        <!-- Spring AI for LLM integration (Phase 5.5 - Requires Maven Central + Spring Repos)
+        To enable Phase 5 LLM extraction, uncomment below AND ensure Maven has access to:
+        - https://repo.maven.apache.org/maven2 (Central)
+        - https://repo.spring.io/release (Spring Release)
+
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+            <version>1.0.0</version>
         </dependency>
         -->
 
