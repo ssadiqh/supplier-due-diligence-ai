@@ -32,7 +32,7 @@ class DocumentEvidenceAgentTest {
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-        evidenceAgent = new DocumentEvidenceAgent(mockDocumentParser, objectMapper);
+        evidenceAgent = new DocumentEvidenceAgent(mockDocumentParser, objectMapper, java.util.Optional.ofNullable(null));
         testCaseId = UUID.randomUUID();
         testDocumentId = UUID.randomUUID();
         testFile = Files.createTempFile("test-", ".pdf").toFile();
@@ -113,6 +113,7 @@ class DocumentEvidenceAgentTest {
         // THEN: Should indicate NOT_CONFIGURED
         assertFalse(result.getSuccess());
         assertTrue(result.getErrorMessage().contains("NOT_CONFIGURED"));
+        assertTrue(result.getErrorMessage().contains("ANTHROPIC_API_KEY"), "Should mention ANTHROPIC_API_KEY configuration");
         assertNull(result.getTokensUsed(), "Should not estimate tokens when LLM not configured");
     }
 

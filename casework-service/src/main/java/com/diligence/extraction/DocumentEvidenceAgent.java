@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import java.io.File;
@@ -12,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,10 +27,12 @@ public class DocumentEvidenceAgent {
 
     private final DocumentParser documentParser;
     private final ObjectMapper objectMapper;
+    private final Optional<ChatModel> chatModel;
 
-    public DocumentEvidenceAgent(DocumentParser documentParser, ObjectMapper objectMapper) {
+    public DocumentEvidenceAgent(DocumentParser documentParser, ObjectMapper objectMapper, Optional<ChatModel> chatModel) {
         this.documentParser = documentParser;
         this.objectMapper = objectMapper;
+        this.chatModel = chatModel;
     }
 
     public ExtractionResult extractSupplierEvidence(UUID caseId, UUID documentId, File documentFile) {
@@ -42,17 +48,13 @@ public class DocumentEvidenceAgent {
             logger.info("Parsed document {} into {} chunks", documentId, chunks.size());
 
             // Step 2: Check if LLM is configured
-            String chunksText = formatChunksForPrompt(chunks);
-            boolean isLlmConfigured = isLlmAvailable();
-
-            if (!isLlmConfigured) {
+            if (!chatModel.isPresent()) {
                 logger.info("LLM not configured for document {}. Returning NOT_CONFIGURED status.", documentId);
                 return createNotConfiguredResult(caseId, documentId, chunks.size(), documentFile.getName());
             }
 
-            // Step 3: Call LLM (when Spring AI 2.0+ available with OPENAI_API_KEY)
-            String systemPrompt = loadPromptTemplate();
-            String userPrompt = "Extract supplier facts from these document chunks:\n\n" + chunksText;
+            // Step 3: Call LLM (Claude via Spring AI)
+            String chunksText = formatChunksForPrompt(chunks);
             SupplierFactsOutput factsOutput = extractFactsFromDocument(chunksText);
 
             if (factsOutput == null) {
@@ -77,8 +79,8 @@ public class DocumentEvidenceAgent {
             result.setSuccess(true);
             result.setEvidence(evidence);
             result.setPromptVersion(PROMPT_VERSION);
-            result.setModelUsed("gpt-4-turbo");
-            result.setTokensUsed(estimateTokens(userPrompt));
+            result.setModelUsed("claude-3-5-sonnet-20241022");
+            result.setTokensUsed(estimateTokens(chunksText));
 
             logger.info("Successfully extracted facts from document {}: {} facts found", documentId, factsOutput.getFacts().size());
 
@@ -90,29 +92,23 @@ public class DocumentEvidenceAgent {
         }
     }
 
-    private boolean isLlmAvailable() {
-        // Spring AI ChatClient integration deferred to Phase 5.5
-        // For now, always return false (awaiting implementation)
-        String apiKey = System.getenv("OPENAI_API_KEY");
-        return apiKey != null && !apiKey.isBlank() && false; // TODO: Wire up ChatClient when Spring AI 1.0+ stable
-    }
-
     private SupplierFactsOutput extractFactsFromDocument(String documentText) {
         try {
-            // Phase 5.5: When Spring AI 1.0+ is stable, implement real LLM extraction:
-            // String systemPrompt = loadPromptTemplate();
-            // String userPrompt = "Extract supplier facts from these document chunks:\n\n" + documentText;
-            // ChatClient client = ChatClient.create(chatModel);
-            // String response = client.prompt().system(systemPrompt).user(userPrompt).call().content();
-            // SupplierFactsOutput output = objectMapper.readValue(response, SupplierFactsOutput.class);
+            if (chatModel.isEmpty()) {
+                return null;
+            }
 
-            // For now, return placeholder pending LLM integration
-            SupplierFactsOutput output = new SupplierFactsOutput();
-            output.setFacts(List.of());
-            output.setSummary("Document ready for extraction. Spring AI integration in progress (Phase 5.5).");
-            output.setComplete(true);
+            String systemPrompt = loadPromptTemplate();
+            String userPrompt = "Extract supplier facts from these document chunks:\n\n" + documentText;
 
+            PromptTemplate template = new PromptTemplate("Extract supplier facts from these document chunks:\n\n{text}");
+            Prompt prompt = template.create(Map.of("text", documentText));
+
+            String response = chatModel.get().call(prompt).getResult().getOutput().getText();
+
+            SupplierFactsOutput output = objectMapper.readValue(response, SupplierFactsOutput.class);
             return output;
+
         } catch (Exception e) {
             logger.error("Error extracting facts from document: {}", e.getMessage(), e);
             return null;
@@ -158,7 +154,6 @@ public class DocumentEvidenceAgent {
         result.setSuccess(false);
         result.setErrorMessage(errorMessage);
         result.setPromptVersion(PROMPT_VERSION);
-        // Do NOT claim a model was used if extraction failed
         result.setModelUsed(null);
         result.setTokensUsed(null);
 
@@ -179,9 +174,8 @@ public class DocumentEvidenceAgent {
         result.setToolName("DOCUMENT_EXTRACTION");
         result.setToolType("EVIDENCE_EXTRACTION");
         result.setSuccess(false);
-        result.setErrorMessage("NOT_CONFIGURED: LLM extraction not available. Configure OPENAI_API_KEY and Spring AI 2.0+ to enable.");
+        result.setErrorMessage("NOT_CONFIGURED: LLM extraction not available. Configure ANTHROPIC_API_KEY and spring.ai.anthropic.api-key to enable.");
         result.setPromptVersion(PROMPT_VERSION);
-        // Do NOT claim a model or tokens when LLM was not called
         result.setModelUsed(null);
         result.setTokensUsed(null);
         result.setEvidence("Document parsed into " + chunkCount + " chunks. Ready for extraction once LLM is configured.");
