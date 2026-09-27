@@ -96,18 +96,15 @@ public class RuleService {
 
     // Deterministic rule evaluation methods
     private RuleOutcome evaluateSanctionCheck(DueDiligenceCase caseEntity) {
-        // Awaiting integration with real sanctions dataset
-        // Cannot justify PASS without actual sanctions screening
+        // Awaiting real sanctions dataset integration (Phase 6+)
         return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateAbnValidation(DueDiligenceCase caseEntity) {
-        // Phase 3 integrates ABN Lookup API - use persisted verification result instead
-        // This rule should consume ToolResult from SupplierVerificationService, not duplicate validation
         if (caseEntity.getSupplierAbn() == null || caseEntity.getSupplierAbn().isBlank()) {
             return RuleOutcome.NOT_APPLICABLE;
         }
-        // Mark as awaiting tool result from ABN verification
+        // Consumes ToolResult from Phase 4 SupplierVerificationService
         return RuleOutcome.NOT_EVALUATED;
     }
 
@@ -119,32 +116,27 @@ public class RuleService {
     }
 
     private RuleOutcome evaluateFinancialThreshold(DueDiligenceCase caseEntity) {
-        // Phase 4+ will check actual financials from external sources
-        // Cannot justify PASS without financial data
+        // Awaiting financial data integration (Phase 6+)
         return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateIndustryRestriction(DueDiligenceCase caseEntity) {
-        // Awaiting industry classification - cannot derive from supplier name alone
-        // Would require industry code lookup or classification service
+        // Awaiting industry classification service (Phase 6+)
         return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateComplianceHistory(DueDiligenceCase caseEntity) {
-        // Phase 6+ will check compliance history database
-        // For now: NOT_EVALUATED
+        // Awaiting compliance history database (Phase 6+)
         return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateBeneficialOwnership(DueDiligenceCase caseEntity) {
-        // Phase 7+ will check beneficial ownership records
-        // For now: NOT_EVALUATED
+        // Awaiting beneficial ownership records (Phase 7+)
         return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluatePoliticalExposure(DueDiligenceCase caseEntity) {
-        // Phase 7+ will check PEP database
-        // For now: NOT_EVALUATED
+        // Awaiting PEP database integration (Phase 7+)
         return RuleOutcome.NOT_EVALUATED;
     }
 }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +37,8 @@ class SupplierVerificationServiceTest {
         MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
         verificationService = new SupplierVerificationService(abnLookupService, toolResultRepository, caseRepository, objectMapper);
+        // Set the configurable threshold (normally injected via @Value in production)
+        ReflectionTestUtils.setField(verificationService, "nameMatchThreshold", 0.80);
     }
 
     @Test

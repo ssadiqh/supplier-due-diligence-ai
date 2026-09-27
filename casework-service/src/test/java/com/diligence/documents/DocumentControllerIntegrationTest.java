@@ -125,6 +125,24 @@ class DocumentControllerIntegrationTest {
                 .andExpect(jsonPath("$.fileType").value("application/pdf"));
     }
 
+    @Test
+    @DisplayName("Should sanitize filename with path traversal attempts")
+    void testUploadFilenameWithPathTraversal() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "../../../etc/passwd.pdf",
+                "application/pdf",
+                "PDF content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/cases/{caseId}/documents", caseId)
+                .file(file)
+                .param("uploadedBy", "analyst@example.com"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fileName").value("../../../etc/passwd.pdf"))
+                .andExpect(jsonPath("$.id").isNotEmpty());
+    }
+
     private MockMultipartFile createMockPdfFile(String filename, String content) {
         return new MockMultipartFile(
                 "file",

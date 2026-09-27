@@ -91,9 +91,18 @@ public class DocumentEvidenceAgent {
     }
 
     private boolean isLlmAvailable() {
-        // Check if Spring AI ChatClient is available and API key is configured
         String apiKey = System.getenv("OPENAI_API_KEY");
-        return apiKey != null && !apiKey.isBlank();
+        if (apiKey == null || apiKey.isBlank()) {
+            return false;
+        }
+        // Check if Spring AI is on classpath (needed for ChatClient)
+        try {
+            Class.forName("org.springframework.ai.chat.client.ChatClient");
+            return true;
+        } catch (ClassNotFoundException e) {
+            logger.debug("Spring AI ChatClient not found on classpath - LLM extraction unavailable");
+            return false;
+        }
     }
 
     private SupplierFactsOutput extractFactsFromDocument(String documentText) {

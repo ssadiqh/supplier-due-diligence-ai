@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.diligence.casework.CaseRepository;
 import com.diligence.casework.DueDiligenceCase;
@@ -20,6 +21,9 @@ public class SupplierVerificationService {
     private final ToolResultRepository toolResultRepository;
     private final CaseRepository caseRepository;
     private final ObjectMapper objectMapper;
+
+    @Value("${supplier.verification.name-match-threshold:0.80}")
+    private double nameMatchThreshold;
 
     /**
      * Verify supplier by calling ABN Lookup tool
@@ -108,7 +112,7 @@ public class SupplierVerificationService {
 
         // Levenshtein distance for fuzzy matching
         double similarity = calculateSimilarity(normalizedCaseName, normalizedAbnName);
-        boolean matches = similarity > 0.80;  // 80% match threshold
+        boolean matches = similarity > nameMatchThreshold;
 
         return new NameMatchResult(matches, similarity);
     }
