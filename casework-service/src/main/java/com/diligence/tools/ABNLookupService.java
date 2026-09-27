@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -11,8 +12,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "abn.mode", havingValue = "live", matchIfMissing = false)
 @RequiredArgsConstructor
-public class ABNLookupService {
+public class ABNLookupService implements IABNLookupService {
 
     private final RestTemplate restTemplate;
 
@@ -21,6 +23,11 @@ public class ABNLookupService {
 
     @Value("${abn.lookup.guid:}")
     private String guid;
+
+    @Override
+    public String getMode() {
+        return "live";
+    }
 
     /**
      * Lookup ABN details from Australian Business Register

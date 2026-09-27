@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SupplierVerificationService {
 
-    private final ABNLookupService abnLookupService;
+    private final IABNLookupService abnLookupService;
     private final ToolResultRepository toolResultRepository;
     private final CaseRepository caseRepository;
     private final ObjectMapper objectMapper;
