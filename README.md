@@ -2,9 +2,11 @@
 
 A learning-first implementation of an enterprise-grade AI system for Australian supplier onboarding and counterparty due-diligence.
 
-## Phase 1-5: Case API, Documents, Rules, Tool Integration & Evidence Foundation ✓
+## Phases 1-4: Complete | Phase 5: Foundation In Progress
 
-Foundation complete. Create cases, upload documents, evaluate business rules, verify suppliers via ABN lookup, extract evidence from PDFs.
+**Phases 1-4 complete.** Create cases, upload documents, evaluate business rules, verify suppliers via ABN lookup.
+
+**Phase 5 (Evidence Extraction) foundation implemented.** PDF text parsing and chunking working; LLM-based structured fact extraction in progress (awaits ChatClient integration).
 
 ### What's Implemented
 

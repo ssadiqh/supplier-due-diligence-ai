@@ -3,6 +3,8 @@ package com.diligence.extraction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -107,5 +109,33 @@ class DocumentParserTest {
         assertEquals("Test text", chunk.getText());
         assertEquals(0, chunk.getStartPosition());
         assertEquals(9, chunk.getEndPosition());
+    }
+
+    @Test
+    @DisplayName("Should parse real PDF fixture and extract text with page references")
+    void testParseRealPdfFixture() throws IOException {
+        // GIVEN: Real PDF fixture
+        ClassPathResource pdfResource = new ClassPathResource("fixtures/sample-supplier-document.pdf");
+        File pdfFile = pdfResource.getFile();
+
+        // WHEN: Parse the real PDF
+        List<PageChunk> chunks = documentParser.parseDocument(pdfFile);
+
+        // THEN: Should produce chunks with page references
+        assertNotNull(chunks, "Should return chunks");
+        assertFalse(chunks.isEmpty(), "Should extract at least one chunk from real PDF");
+
+        // Verify first chunk has correct page number
+        PageChunk firstChunk = chunks.get(0);
+        assertEquals(1, firstChunk.getPageNumber(), "First chunk should be from page 1");
+
+        // Verify text was extracted
+        assertNotNull(firstChunk.getText(), "Chunk should contain text");
+        assertFalse(firstChunk.getText().isBlank(), "Extracted text should not be blank");
+
+        // Verify positions are reasonable
+        assertTrue(firstChunk.getStartPosition() >= 0, "Start position should be non-negative");
+        assertTrue(firstChunk.getEndPosition() > firstChunk.getStartPosition(),
+            "End position should be after start position");
     }
 }
