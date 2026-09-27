@@ -210,6 +210,27 @@ Remaining work:
 
 ---
 
-See [docs/Australian_Supplier_Due_Diligence_Agentic_AI.md](docs/Australian_Supplier_Due_Diligence_Agentic_AI.md) for the full project context and architecture decisions.
+## 📚 Full Documentation
 
-See [docs/Project Context.md](docs/Project%20Context.md) for detailed scope and business context.
+Comprehensive documentation is available in the **Docusaurus site** (interactive HTML):
+
+```bash
+npm install
+npm run start
+```
+
+Then open http://localhost:3000
+
+**Documentation covers:**
+- [Getting Started](./docs/getting-started/quickstart.md) - Setup & run the app
+- [Architecture](./docs/architecture.md) - System design with diagrams
+- [Models](./docs/models.md) - Data structures and enums
+- [Phases](./docs/phases.md) - Roadmap and status
+- **Deep Dives:**
+  - [PDF Parsing](./docs/deep-dives/pdf-parsing.md) - Chunking algorithm
+  - [Rules Evaluation](./docs/deep-dives/rules-evaluation.md) - Business rules
+  - [LLM Integration](./docs/deep-dives/llm-integration.md) - Claude API setup
+  - [Database](./docs/deep-dives/database.md) - Schema & migrations
+  - [Testing](./docs/deep-dives/testing.md) - Test strategy
+
+See [docs/Australian_Supplier_Due_Diligence_Agentic_AI.md](docs/Australian_Supplier_Due_Diligence_Agentic_AI.md) for project context and decisions.
