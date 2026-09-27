@@ -78,7 +78,8 @@ class RuleServiceTest {
         RuleResult result = ruleService.evaluateRule(caseId, ruleId, "ABN valid", "ABN check passed");
 
         assertNotNull(result);
-        assertTrue(result.getPassed());
+        assertEquals(RuleOutcome.PASS, result.getOutcome());
+        assertTrue(result.isPassed());
         assertEquals(ruleId, result.getRule().getId());
     }
 
@@ -106,7 +107,8 @@ class RuleServiceTest {
         RuleResult result = ruleService.evaluateRule(caseId, ruleId, "ABN invalid", "ABN check failed");
 
         assertNotNull(result);
-        assertFalse(result.getPassed());
+        assertEquals(RuleOutcome.FAIL, result.getOutcome());
+        assertTrue(result.isFailed());
     }
 
     @Test
@@ -137,7 +139,7 @@ class RuleServiceTest {
 
         assertNotNull(results);
         assertEquals(2, results.size());
-        assertTrue(results.get(0).getPassed());  // ABN validation should pass
-        assertTrue(results.get(1).getPassed());  // Business registration should pass
+        assertEquals(RuleOutcome.PASS, results.get(0).getOutcome());  // ABN validation should pass
+        assertEquals(RuleOutcome.PASS, results.get(1).getOutcome());  // Business registration should pass
     }
 }

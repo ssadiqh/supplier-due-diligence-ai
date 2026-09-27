@@ -28,11 +28,12 @@ public class RuleResult {
     @JoinColumn(name = "rule_id", nullable = false)
     private Rule rule;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Boolean passed;
+    private RuleOutcome outcome = RuleOutcome.NOT_EVALUATED;
 
     @Column(columnDefinition = "TEXT")
-    private String details;
+    private String reason;
 
     @Column(columnDefinition = "TEXT")
     private String evidence;
@@ -40,12 +41,26 @@ public class RuleResult {
     @Column(nullable = false, updatable = false)
     private LocalDateTime evaluatedAt = LocalDateTime.now();
 
-    public RuleResult(DueDiligenceCase caseEntity, Rule rule, Boolean passed, String details, String evidence) {
+    public RuleResult(DueDiligenceCase caseEntity, Rule rule, RuleOutcome outcome, String reason, String evidence) {
         this.caseEntity = caseEntity;
         this.rule = rule;
-        this.passed = passed;
-        this.details = details;
+        this.outcome = outcome;
+        this.reason = reason;
         this.evidence = evidence;
         this.evaluatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Check if rule evaluation passed
+     */
+    public boolean isPassed() {
+        return outcome == RuleOutcome.PASS;
+    }
+
+    /**
+     * Check if rule evaluation failed
+     */
+    public boolean isFailed() {
+        return outcome == RuleOutcome.FAIL;
     }
 }

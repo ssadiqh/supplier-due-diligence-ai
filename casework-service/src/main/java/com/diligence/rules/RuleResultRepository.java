@@ -8,5 +8,5 @@ import java.util.UUID;
 @Repository
 public interface RuleResultRepository extends JpaRepository<RuleResult, UUID> {
     List<RuleResult> findByCaseEntityId(UUID caseId);
-    List<RuleResult> findByCaseEntityIdAndPassed(UUID caseId, Boolean passed);
+    List<RuleResult> findByCaseEntityIdAndOutcome(UUID caseId, RuleOutcome outcome);
 }

@@ -1,6 +1,8 @@
 package com.diligence.rules;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import com.diligence.casework.CaseRepository;
 import com.diligence.casework.DueDiligenceCase;
@@ -12,6 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RuleService {
 
+    private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
     private final RuleRepository ruleRepository;
     private final RuleResultRepository ruleResultRepository;
     private final CaseRepository caseRepository;
@@ -41,9 +44,9 @@ public class RuleService {
         Rule rule = getRule(ruleId);
 
         // Evaluate based on rule type (simple deterministic logic)
-        Boolean passed = evaluateRuleLogic(rule, caseEntity);
+        RuleOutcome outcome = evaluateRuleLogic(rule, caseEntity);
 
-        RuleResult result = new RuleResult(caseEntity, rule, passed, details, evidence);
+        RuleResult result = new RuleResult(caseEntity, rule, outcome, details, evidence);
         return ruleResultRepository.save(result);
     }
 
@@ -55,11 +58,11 @@ public class RuleService {
         List<RuleResult> results = new java.util.ArrayList<>();
 
         for (Rule rule : activeRules) {
-            Boolean passed = evaluateRuleLogic(rule, caseEntity);
+            RuleOutcome outcome = evaluateRuleLogic(rule, caseEntity);
             String details = "Auto-evaluated rule: " + rule.getName();
             String evidence = "Rule evaluation on case " + caseId;
 
-            RuleResult result = new RuleResult(caseEntity, rule, passed, details, evidence);
+            RuleResult result = new RuleResult(caseEntity, rule, outcome, details, evidence);
             results.add(ruleResultRepository.save(result));
         }
 
@@ -71,14 +74,14 @@ public class RuleService {
     }
 
     public List<RuleResult> getFailedRulesForCase(UUID caseId) {
-        return ruleResultRepository.findByCaseEntityIdAndPassed(caseId, false);
+        return ruleResultRepository.findByCaseEntityIdAndOutcome(caseId, RuleOutcome.FAIL);
     }
 
     public List<RuleResult> getPassedRulesForCase(UUID caseId) {
-        return ruleResultRepository.findByCaseEntityIdAndPassed(caseId, true);
+        return ruleResultRepository.findByCaseEntityIdAndOutcome(caseId, RuleOutcome.PASS);
     }
 
-    private Boolean evaluateRuleLogic(Rule rule, DueDiligenceCase caseEntity) {
+    private RuleOutcome evaluateRuleLogic(Rule rule, DueDiligenceCase caseEntity) {
         return switch (rule.getRuleType()) {
             case SANCTION_CHECK -> evaluateSanctionCheck(caseEntity);
             case ABN_VALIDATION -> evaluateAbnValidation(caseEntity);
@@ -92,51 +95,65 @@ public class RuleService {
     }
 
     // Deterministic rule evaluation methods
-    private Boolean evaluateSanctionCheck(DueDiligenceCase caseEntity) {
+    private RuleOutcome evaluateSanctionCheck(DueDiligenceCase caseEntity) {
         // Phase 4 will integrate real sanctions API
-        // For now: pass if supplierName doesn't contain blocked keywords
-        return !caseEntity.getSupplierName().toLowerCase().contains("blocked");
+        if (caseEntity.getSupplierName() == null || caseEntity.getSupplierName().isBlank()) {
+            return RuleOutcome.UNAVAILABLE;
+        }
+        if (caseEntity.getSupplierName().toLowerCase().contains("blocked")) {
+            return RuleOutcome.FAIL;
+        }
+        return RuleOutcome.PASS;
     }
 
-    private Boolean evaluateAbnValidation(DueDiligenceCase caseEntity) {
-        // Phase 4 will integrate ABN Lookup API
-        // For now: pass if ABN is provided and is 11 digits
-        return caseEntity.getSupplierAbn() != null && caseEntity.getSupplierAbn().length() == 11;
+    private RuleOutcome evaluateAbnValidation(DueDiligenceCase caseEntity) {
+        // Phase 3 will integrate ABN Lookup API with proper validation
+        if (caseEntity.getSupplierAbn() == null || caseEntity.getSupplierAbn().isBlank()) {
+            return RuleOutcome.NOT_APPLICABLE;
+        }
+        if (caseEntity.getSupplierAbn().length() != 11) {
+            return RuleOutcome.FAIL;
+        }
+        return RuleOutcome.PASS;
     }
 
-    private Boolean evaluateBusinessRegistration(DueDiligenceCase caseEntity) {
-        // Pass if supplierLegalName is provided
-        return caseEntity.getSupplierLegalName() != null && !caseEntity.getSupplierLegalName().isBlank();
+    private RuleOutcome evaluateBusinessRegistration(DueDiligenceCase caseEntity) {
+        if (caseEntity.getSupplierLegalName() != null && !caseEntity.getSupplierLegalName().isBlank()) {
+            return RuleOutcome.PASS;
+        }
+        return RuleOutcome.NOT_EVALUATED;
     }
 
-    private Boolean evaluateFinancialThreshold(DueDiligenceCase caseEntity) {
+    private RuleOutcome evaluateFinancialThreshold(DueDiligenceCase caseEntity) {
         // Phase 4+ will check actual financials
-        // For now: always pass (no financial data in Phase 3)
-        return true;
+        // For now: NOT_EVALUATED until financial data available
+        return RuleOutcome.NOT_EVALUATED;
     }
 
-    private Boolean evaluateIndustryRestriction(DueDiligenceCase caseEntity) {
-        // Check if industry is in restricted list
+    private RuleOutcome evaluateIndustryRestriction(DueDiligenceCase caseEntity) {
+        if (caseEntity.getSupplierName() == null || caseEntity.getSupplierName().isBlank()) {
+            return RuleOutcome.UNAVAILABLE;
+        }
         String industry = caseEntity.getSupplierName().toLowerCase();
         List<String> restricted = List.of("weapons", "gambling", "tobacco");
-        return !restricted.stream().anyMatch(industry::contains);
+        return restricted.stream().anyMatch(industry::contains) ? RuleOutcome.FAIL : RuleOutcome.PASS;
     }
 
-    private Boolean evaluateComplianceHistory(DueDiligenceCase caseEntity) {
+    private RuleOutcome evaluateComplianceHistory(DueDiligenceCase caseEntity) {
         // Phase 6+ will check compliance history database
-        // For now: always pass
-        return true;
+        // For now: NOT_EVALUATED
+        return RuleOutcome.NOT_EVALUATED;
     }
 
-    private Boolean evaluateBeneficialOwnership(DueDiligenceCase caseEntity) {
+    private RuleOutcome evaluateBeneficialOwnership(DueDiligenceCase caseEntity) {
         // Phase 7+ will check beneficial ownership records
-        // For now: always pass
-        return true;
+        // For now: NOT_EVALUATED
+        return RuleOutcome.NOT_EVALUATED;
     }
 
-    private Boolean evaluatePoliticalExposure(DueDiligenceCase caseEntity) {
+    private RuleOutcome evaluatePoliticalExposure(DueDiligenceCase caseEntity) {
         // Phase 7+ will check PEP database
-        // For now: always pass
-        return true;
+        // For now: NOT_EVALUATED
+        return RuleOutcome.NOT_EVALUATED;
     }
 }
