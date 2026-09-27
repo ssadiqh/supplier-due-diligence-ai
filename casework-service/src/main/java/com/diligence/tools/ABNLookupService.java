@@ -97,8 +97,10 @@ public class ABNLookupService implements IABNLookupService {
      */
     private ABNLookupResult callABNAPI(String abn) {
         if (guid == null || guid.isEmpty()) {
-            log.warn("ABN_LOOKUP_GUID not configured, using mock data");
-            return new ABNLookupResult(abn, "Test Company Pty Ltd", "Active", true);
+            // In LIVE mode, fail closed - do not fall back to mock data
+            log.error("ABN_LOOKUP_GUID not configured in LIVE mode - ABN lookup cannot proceed");
+            throw new RuntimeException("ABN lookup is not configured: ABN_LOOKUP_GUID environment variable is missing. " +
+                    "Set abn.lookup.guid or switch to mock mode (abn.mode=mock) for development.");
         }
 
         try {

@@ -139,7 +139,9 @@ class RuleServiceTest {
 
         assertNotNull(results);
         assertEquals(2, results.size());
-        assertEquals(RuleOutcome.PASS, results.get(0).getOutcome());  // ABN validation should pass
-        assertEquals(RuleOutcome.PASS, results.get(1).getOutcome());  // Business registration should pass
+        // ABN validation now returns NOT_EVALUATED (awaiting tool result from SupplierVerificationService)
+        assertEquals(RuleOutcome.NOT_EVALUATED, results.get(0).getOutcome());
+        // Business registration passes with legal name provided
+        assertEquals(RuleOutcome.PASS, results.get(1).getOutcome());
     }
 }

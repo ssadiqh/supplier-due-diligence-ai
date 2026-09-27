@@ -42,11 +42,16 @@ public class DocumentController {
     }
 
     @GetMapping("/{documentId}")
-    public ResponseEntity<Document> getDocument(
+    public ResponseEntity<?> getDocument(
             @PathVariable UUID caseId,
             @PathVariable UUID documentId) {
-        Document document = documentService.getDocumentById(documentId);
-        return ResponseEntity.ok(document);
+        try {
+            Document document = documentService.getDocumentByIdAndCaseId(documentId, caseId);
+            return ResponseEntity.ok(document);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{documentId}")
@@ -54,7 +59,7 @@ public class DocumentController {
             @PathVariable UUID caseId,
             @PathVariable UUID documentId) {
         try {
-            documentService.deleteDocument(documentId);
+            documentService.deleteDocumentByIdAndCaseId(documentId, caseId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

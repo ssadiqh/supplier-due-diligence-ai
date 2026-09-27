@@ -64,8 +64,32 @@ public class DocumentService {
                 .orElseThrow(() -> new RuntimeException("Document not found"));
     }
 
+    /**
+     * Get document by ID and verify it belongs to the specified case
+     * Enforces case ownership to prevent cross-case access
+     */
+    public Document getDocumentByIdAndCaseId(UUID documentId, UUID caseId) {
+        return documentRepository.findByIdAndCaseEntityId(documentId, caseId)
+                .orElseThrow(() -> new RuntimeException("Document not found or does not belong to this case"));
+    }
+
     public void deleteDocument(UUID documentId) throws IOException {
         Document document = getDocumentById(documentId);
+
+        // Delete file from disk
+        Path filePath = Paths.get(document.getFilePath());
+        Files.deleteIfExists(filePath);
+
+        // Delete database record
+        documentRepository.deleteById(documentId);
+    }
+
+    /**
+     * Delete document by ID and verify it belongs to the specified case
+     * Enforces case ownership to prevent cross-case deletion
+     */
+    public void deleteDocumentByIdAndCaseId(UUID documentId, UUID caseId) throws IOException {
+        Document document = getDocumentByIdAndCaseId(documentId, caseId);
 
         // Delete file from disk
         Path filePath = Paths.get(document.getFilePath());

@@ -69,15 +69,13 @@ public class DocumentParser {
 
             pageChunks.add(chunk);
 
-            // Move forward with overlap, but ensure we always advance
-            int nextPosition = endPosition - OVERLAP;
-            // If overlap would prevent progress, advance by at least 1 char
-            position = Math.max(nextPosition, position + 1);
-
-            // Break if we've reached or passed the end
-            if (position >= text.length()) {
+            // Stop immediately if we've reached the end (prevents tail chunk duplication)
+            if (endPosition == text.length()) {
                 break;
             }
+
+            // Move forward with overlap for next chunk
+            position = endPosition - OVERLAP;
         }
 
         return pageChunks;

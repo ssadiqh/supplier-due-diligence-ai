@@ -96,25 +96,19 @@ public class RuleService {
 
     // Deterministic rule evaluation methods
     private RuleOutcome evaluateSanctionCheck(DueDiligenceCase caseEntity) {
-        // Phase 4 will integrate real sanctions API
-        if (caseEntity.getSupplierName() == null || caseEntity.getSupplierName().isBlank()) {
-            return RuleOutcome.UNAVAILABLE;
-        }
-        if (caseEntity.getSupplierName().toLowerCase().contains("blocked")) {
-            return RuleOutcome.FAIL;
-        }
-        return RuleOutcome.PASS;
+        // Awaiting integration with real sanctions dataset
+        // Cannot justify PASS without actual sanctions screening
+        return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateAbnValidation(DueDiligenceCase caseEntity) {
-        // Phase 3 will integrate ABN Lookup API with proper validation
+        // Phase 3 integrates ABN Lookup API - use persisted verification result instead
+        // This rule should consume ToolResult from SupplierVerificationService, not duplicate validation
         if (caseEntity.getSupplierAbn() == null || caseEntity.getSupplierAbn().isBlank()) {
             return RuleOutcome.NOT_APPLICABLE;
         }
-        if (caseEntity.getSupplierAbn().length() != 11) {
-            return RuleOutcome.FAIL;
-        }
-        return RuleOutcome.PASS;
+        // Mark as awaiting tool result from ABN verification
+        return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateBusinessRegistration(DueDiligenceCase caseEntity) {
@@ -125,18 +119,15 @@ public class RuleService {
     }
 
     private RuleOutcome evaluateFinancialThreshold(DueDiligenceCase caseEntity) {
-        // Phase 4+ will check actual financials
-        // For now: NOT_EVALUATED until financial data available
+        // Phase 4+ will check actual financials from external sources
+        // Cannot justify PASS without financial data
         return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateIndustryRestriction(DueDiligenceCase caseEntity) {
-        if (caseEntity.getSupplierName() == null || caseEntity.getSupplierName().isBlank()) {
-            return RuleOutcome.UNAVAILABLE;
-        }
-        String industry = caseEntity.getSupplierName().toLowerCase();
-        List<String> restricted = List.of("weapons", "gambling", "tobacco");
-        return restricted.stream().anyMatch(industry::contains) ? RuleOutcome.FAIL : RuleOutcome.PASS;
+        // Awaiting industry classification - cannot derive from supplier name alone
+        // Would require industry code lookup or classification service
+        return RuleOutcome.NOT_EVALUATED;
     }
 
     private RuleOutcome evaluateComplianceHistory(DueDiligenceCase caseEntity) {
