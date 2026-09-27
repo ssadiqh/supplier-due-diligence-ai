@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -100,5 +102,35 @@ class DocumentControllerIntegrationTest {
                 .param("uploadedBy", "analyst@example.com"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Only PDF files are allowed"));
+    }
+
+    @Test
+    @DisplayName("Should upload real PDF fixture")
+    void testUploadRealPdfFixture() throws Exception {
+        ClassPathResource pdfResource = new ClassPathResource("fixtures/sample-supplier-document.pdf");
+        byte[] pdfContent = pdfResource.getContentAsByteArray();
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "supplier-due-diligence.pdf",
+                "application/pdf",
+                pdfContent
+        );
+
+        mockMvc.perform(multipart("/api/cases/{caseId}/documents", caseId)
+                .file(file)
+                .param("uploadedBy", "analyst@example.com"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fileName").value("supplier-due-diligence.pdf"))
+                .andExpect(jsonPath("$.fileType").value("application/pdf"));
+    }
+
+    private MockMultipartFile createMockPdfFile(String filename, String content) {
+        return new MockMultipartFile(
+                "file",
+                filename,
+                "application/pdf",
+                content.getBytes()
+        );
     }
 }
