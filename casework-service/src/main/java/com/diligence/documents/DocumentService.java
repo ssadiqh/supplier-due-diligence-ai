@@ -36,11 +36,16 @@ public class DocumentService {
         Path casePath = Paths.get(uploadDir, caseId.toString());
         Files.createDirectories(casePath);
 
-        // Save file with UUID-based name to avoid collisions
+        // Sanitize filename: remove path separators to prevent traversal attacks
         String fileName = file.getOriginalFilename();
-        String storageName = UUID.randomUUID() + "-" + fileName;
+        String sanitizedFileName = fileName.replaceAll("[/\\\\]", "");
+        String storageName = UUID.randomUUID() + "-" + sanitizedFileName;
         Path filePath = casePath.resolve(storageName);
-        Files.write(filePath, file.getBytes());
+
+        // Stream file instead of loading entire contents into memory
+        try (var inputStream = file.getInputStream()) {
+            Files.copy(inputStream, filePath);
+        }
 
         // Create document record
         Document document = new Document(
