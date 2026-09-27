@@ -91,30 +91,30 @@ public class DocumentEvidenceAgent {
     }
 
     private boolean isLlmAvailable() {
+        // Spring AI ChatClient integration deferred to Phase 5.5
+        // For now, always return false (awaiting implementation)
         String apiKey = System.getenv("OPENAI_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            return false;
-        }
-        // Check if Spring AI is on classpath (needed for ChatClient)
-        try {
-            Class.forName("org.springframework.ai.chat.client.ChatClient");
-            return true;
-        } catch (ClassNotFoundException e) {
-            logger.debug("Spring AI ChatClient not found on classpath - LLM extraction unavailable");
-            return false;
-        }
+        return apiKey != null && !apiKey.isBlank() && false; // TODO: Wire up ChatClient when Spring AI 1.0+ stable
     }
 
     private SupplierFactsOutput extractFactsFromDocument(String documentText) {
         try {
+            // Phase 5.5: When Spring AI 1.0+ is stable, implement real LLM extraction:
+            // String systemPrompt = loadPromptTemplate();
+            // String userPrompt = "Extract supplier facts from these document chunks:\n\n" + documentText;
+            // ChatClient client = ChatClient.create(chatModel);
+            // String response = client.prompt().system(systemPrompt).user(userPrompt).call().content();
+            // SupplierFactsOutput output = objectMapper.readValue(response, SupplierFactsOutput.class);
+
+            // For now, return placeholder pending LLM integration
             SupplierFactsOutput output = new SupplierFactsOutput();
             output.setFacts(List.of());
-            output.setSummary("Document ready for extraction. Configure OPENAI_API_KEY and add Spring AI 2.0+ to enable LLM fact extraction.");
+            output.setSummary("Document ready for extraction. Spring AI integration in progress (Phase 5.5).");
             output.setComplete(true);
 
             return output;
         } catch (Exception e) {
-            logger.error("Error extracting facts: {}", e.getMessage());
+            logger.error("Error extracting facts from document: {}", e.getMessage(), e);
             return null;
         }
     }
