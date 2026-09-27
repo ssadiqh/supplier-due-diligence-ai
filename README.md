@@ -212,25 +212,11 @@ Remaining work:
 
 ## 📚 Full Documentation
 
-Comprehensive documentation is available in the **Docusaurus site** (interactive HTML):
+Open **[docs/index.html](docs/index.html)** in your browser for interactive documentation.
 
-```bash
-npm install
-npm run start
-```
+**Documentation includes:**
+- **Getting Started** - Quick start guide, API reference
+- **Core Concepts** - Architecture, models, phases & roadmap  
+- **Deep Dives** - PDF parsing, rules engine, LLM integration, database, testing
 
-Then open http://localhost:3000
-
-**Documentation covers:**
-- [Getting Started](./docs/getting-started/quickstart.md) - Setup & run the app
-- [Architecture](./docs/architecture.md) - System design with diagrams
-- [Models](./docs/models.md) - Data structures and enums
-- [Phases](./docs/phases.md) - Roadmap and status
-- **Deep Dives:**
-  - [PDF Parsing](./docs/deep-dives/pdf-parsing.md) - Chunking algorithm
-  - [Rules Evaluation](./docs/deep-dives/rules-evaluation.md) - Business rules
-  - [LLM Integration](./docs/deep-dives/llm-integration.md) - Claude API setup
-  - [Database](./docs/deep-dives/database.md) - Schema & migrations
-  - [Testing](./docs/deep-dives/testing.md) - Test strategy
-
-See [docs/Australian_Supplier_Due_Diligence_Agentic_AI.md](docs/Australian_Supplier_Due_Diligence_Agentic_AI.md) for project context and decisions.
+All documentation files are in Markdown format in the `/docs` folder.
