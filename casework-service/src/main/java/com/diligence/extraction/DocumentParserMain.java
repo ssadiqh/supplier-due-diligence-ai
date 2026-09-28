@@ -9,33 +9,16 @@ public class DocumentParserMain {
         System.out.println("=== Document Parser - Standalone Mode ===\n");
 
         DocumentParser parser = new DocumentParser();
+        
+        args = new String[1];        
+        args[0] = "C:/Ai Projects v2/supplier-due-diligence-ai/sample-data/policies/public/foreign-bribery-guidance.pdf";
 
-        if (args.length == 0) {
-            System.out.println("Usage: java DocumentParserMain <path-to-pdf>\n");
-            System.out.println("Example: java DocumentParserMain sample-supplier-document.pdf\n");
-            demoMode(parser);
-        } else {
-            testMode(parser, args[0]);
-        }
-    }
-
-    private static void demoMode(DocumentParser parser) {
-        System.out.println("--- Demo Mode ---\n");
-
-        // Test with fixture if available
-        File fixture = new File("src/test/resources/fixtures/sample-supplier-document.pdf");
-        if (fixture.exists()) {
-            System.out.println("Testing with fixture: " + fixture.getPath() + "\n");
-            testMode(parser, fixture.getPath());
-        } else {
-            System.out.println("⚠️  No fixture found at: " + fixture.getPath());
-            System.out.println("Provide a PDF path as argument to test.\n");
-        }
+        testMode(parser, args[0]);
     }
 
     private static void testMode(DocumentParser parser, String filePath) {
+    	
         File file = new File(filePath);
-
         if (!file.exists()) {
             System.err.println("❌ File not found: " + filePath);
             return;

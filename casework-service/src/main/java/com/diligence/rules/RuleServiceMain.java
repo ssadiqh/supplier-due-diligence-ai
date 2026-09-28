@@ -1,56 +1,23 @@
 package com.diligence.rules;
 
-import com.diligence.casework.DueDiligenceCase;
-import com.diligence.casework.CaseStatus;
-import java.util.UUID;
-
 public class RuleServiceMain {
 
     public static void main(String[] args) {
-        System.out.println("=== Rule Service - Standalone Mode ===\n");
+        System.out.println("=== Rule Service - Demo Mode ===\n");
+        System.out.println("RuleService requires Spring Boot context and database repositories.");
+        System.out.println("To test rule evaluation logic, run the application and use REST API:\n");
 
-        // Create mock ABN lookup service
-        MockABNLookupService abnService = new MockABNLookupService();
-        RuleService ruleService = new RuleService(abnService);
+        System.out.println("1. Create a case:");
+        System.out.println("   POST /api/cases");
+        System.out.println("   {\"supplierName\": \"Test Company\", \"supplierAbn\": \"12345678901\"}\n");
 
-        if (args.length == 0) {
-            demoMode(ruleService);
-        } else {
-            testMode(ruleService, args[0]);
-        }
-    }
+        System.out.println("2. Evaluate rules:");
+        System.out.println("   POST /api/cases/{caseId}/rules/evaluate-all\n");
 
-    private static void demoMode(RuleService ruleService) {
-        System.out.println("--- Demo Mode: Testing Rule Evaluation ---\n");
+        System.out.println("3. View results:");
+        System.out.println("   GET /api/cases/{caseId}/rules/results\n");
 
-        // Create test cases
-        testCase("Valid ABN", "12345678901", ruleService);
-        testCase("Invalid ABN", "00000000000", ruleService);
-        testCase("Missing ABN", null, ruleService);
-    }
-
-    private static void testMode(RuleService ruleService, String abn) {
-        System.out.println("Testing ABN: " + abn + "\n");
-        testCase("Test Case", abn, ruleService);
-    }
-
-    private static void testCase(String name, String abn, RuleService ruleService) {
-        DueDiligenceCase testCase = new DueDiligenceCase();
-        testCase.setId(UUID.randomUUID());
-        testCase.setBusinessName("Test Company");
-        testCase.setSupplierAbn(abn);
-        testCase.setStatus(CaseStatus.INTAKE);
-
-        System.out.println("--- " + name + " ---");
-        System.out.println("ABN: " + abn);
-        System.out.println("Business: " + testCase.getBusinessName() + "\n");
-
-        RuleResult result = ruleService.evaluateABNValidation(testCase);
-
-        System.out.println("Result:");
-        System.out.println("  Outcome: " + result.getOutcome());
-        System.out.println("  Message: " + result.getExplanation());
-        System.out.println("  Evaluated: " + result.getEvaluatedAt());
-        System.out.println();
+        System.out.println("Or use the full Spring Boot application:");
+        System.out.println("   mvn spring-boot:run");
     }
 }

@@ -5,45 +5,44 @@ public class ABNLookupServiceMain {
     public static void main(String[] args) {
         System.out.println("=== ABN Lookup Service - Standalone Mode ===\n");
 
-        ABNLookupService abnService = new MockABNLookupService();
+        IABNLookupService abnService = new MockABNLookupService();
 
         if (args.length == 0) {
             demoMode(abnService);
         } else {
-            testMode(abnService, args[0], args.length > 1 ? args[1] : null);
+            testMode(abnService, args[0]);
         }
     }
 
-    private static void demoMode(ABNLookupService abnService) {
+    private static void demoMode(IABNLookupService abnService) {
         System.out.println("--- Demo Mode: Testing ABN Lookups ---\n");
 
-        testABN("12345678901", "Test Company Ltd", abnService);
-        testABN("50110219460", "Apple Australia Pty Ltd", abnService);
-        testABN("INVALID", null, abnService);
+        testABN("12345678901", "Test Company", abnService);
+        testABN("50110219460", "Apple Australia", abnService);
+        testABN("11111111111", "Invalid", abnService);
     }
 
-    private static void testMode(ABNLookupService abnService, String abn, String expectedName) {
+    private static void testMode(IABNLookupService abnService, String abn) {
         System.out.println("Testing ABN Lookup\n");
-        testABN(abn, expectedName, abnService);
+        testABN(abn, null, abnService);
     }
 
-    private static void testABN(String abn, String expectedName, ABNLookupService abnService) {
+    private static void testABN(String abn, String expectedName, IABNLookupService abnService) {
         System.out.println("--- ABN: " + abn + " ---");
-        System.out.println("Expected: " + (expectedName != null ? expectedName : "(mock data)"));
+        if (expectedName != null) {
+            System.out.println("Expected: " + expectedName);
+        }
         System.out.println();
 
         try {
-            SupplierInfo info = abnService.verifyABN(abn);
-
-            if (info == null) {
-                System.out.println("Result: ❌ NOT FOUND\n");
-                return;
-            }
+            ABNLookupService.ABNLookupResult result = abnService.lookupABN(abn);
 
             System.out.println("Result:");
-            System.out.println("  ABN: " + info.getAbn());
-            System.out.println("  Name: " + info.getBusinessName());
-            System.out.println("  Valid: " + (info.isValid() ? "✅ Yes" : "❌ No"));
+            System.out.println("  ABN: " + result.getAbn());
+            System.out.println("  Name: " + result.getBusinessName());
+            System.out.println("  Status: " + result.getStatus());
+            System.out.println("  Found: " + (result.isFound() ? "✅ Yes" : "❌ No"));
+            System.out.println("  Mode: " + abnService.getMode());
             System.out.println();
 
         } catch (Exception e) {
