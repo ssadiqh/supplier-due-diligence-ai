@@ -1,37 +1,33 @@
 package com.diligence.tools;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.context.ApplicationContext;
-import com.diligence.SupplierDueDiligenceApplication;
+import org.springframework.web.client.RestTemplate;
+import java.lang.reflect.Field;
 
 public class RealABNLookupMain {
 
     public static void main(String[] args) {
-        // Separate Spring properties from user ABN input
-        // Spring args: --abn.mode=live, user args: ABN number (11 digits)
-        java.util.List<String> springArgsList = new java.util.ArrayList<>();
+        // Separate user ABN input from properties
         String userAbn = null;
+        boolean liveMode = false;
 
         for (String arg : args) {
-            if (arg.startsWith("--")) {
-                springArgsList.add(arg);
+            if ("--abn.mode=live".equals(arg)) {
+                liveMode = true;
             } else if (arg.matches("\\d{11}")) {
                 userAbn = arg;
             }
         }
 
-        // Add default Spring args to disable database
-        springArgsList.add("--spring.jpa.hibernate.ddl-auto=none");
-        springArgsList.add("--spring.flyway.enabled=false");
-
-        // Initialize Spring context (without web server) to get ABNLookupService with RestTemplate and GUID config
-        SpringApplication app = new SpringApplication(SupplierDueDiligenceApplication.class);
-        app.setWebApplicationType(WebApplicationType.NONE);
-        ApplicationContext context = app.run(springArgsList.toArray(new String[0]));
-
-        // Get the ABN lookup service (will be live if abn.mode=live and GUID configured)
-        IABNLookupService abnService = context.getBean(IABNLookupService.class);
+        // Choose service based on mode
+        IABNLookupService abnService;
+        if (liveMode) {
+            // For live mode, instantiate ABNLookupService with RestTemplate directly
+            // (avoids full Spring context initialization)
+            abnService = new LiveABNLookupServiceWrapper();
+        } else {
+            // For demo/test, use mock service (no Spring needed)
+            abnService = new MockABNLookupService();
+        }
 
         System.out.println("=== ABN Lookup Service - Real Mode ===\n");
         System.out.println("Mode: " + abnService.getMode() + "\n");
@@ -77,6 +73,54 @@ public class RealABNLookupMain {
             System.out.println("Error: " + e.getMessage());
             System.out.println("  Mode: " + abnService.getMode());
             System.out.println();
+        }
+    }
+
+    /**
+     * Wrapper to instantiate ABNLookupService without Spring context
+     * Uses reflection to inject RestTemplate and configuration
+     */
+    private static class LiveABNLookupServiceWrapper implements IABNLookupService {
+        private ABNLookupService delegate;
+
+        LiveABNLookupServiceWrapper() {
+            try {
+                // Create ABNLookupService with RestTemplate
+                RestTemplate restTemplate = new RestTemplate();
+                this.delegate = new ABNLookupService(restTemplate);
+
+                // Inject configuration via reflection
+                setFieldValue(delegate, "baseUrl", "https://abr.business.gov.au");
+                setFieldValue(delegate, "guid", readGuidFromProperties());
+
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize live ABN lookup service: " + e.getMessage(), e);
+            }
+        }
+
+        private static void setFieldValue(Object obj, String fieldName, Object value) throws Exception {
+            Field field = obj.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(obj, value);
+        }
+
+        private static String readGuidFromProperties() {
+            // Read GUID from application.yml via System property or return configured default
+            String guid = System.getProperty("abn.lookup.guid");
+            if (guid == null || guid.isEmpty()) {
+                guid = "99b624c4-7e1b-4c68-ad56-2ce50d6af75c";  // Default from application.yml
+            }
+            return guid;
+        }
+
+        @Override
+        public ABNLookupService.ABNLookupResult lookupABN(String abn) {
+            return delegate.lookupABN(abn);
+        }
+
+        @Override
+        public String getMode() {
+            return "live";
         }
     }
 }
