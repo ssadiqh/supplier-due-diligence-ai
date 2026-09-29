@@ -54,25 +54,59 @@ curl http://localhost:8080/api/cases/{caseId}/rules/results
 
 ---
 
-## ABN Lookup Service
+## ABN Lookup Service - Mock Mode
 
-Test Australian Business Register lookups (mock or live).
+Test Australian Business Register lookups with synthetic data.
 
 ```bash
-# Demo mode (tests sample ABNs)
+# Demo mode (tests sample ABNs with mock data)
 mvn compile exec:java -Dexec.mainClass="com.diligence.tools.ABNLookupServiceMain"
 
-# Test specific ABN
+# Test specific ABN with mock data
 mvn compile exec:java -Dexec.mainClass="com.diligence.tools.ABNLookupServiceMain" \
-  -Dexec.args="50110219460 'Apple Australia Pty Ltd'"
+  -Dexec.args="50110219460"
 ```
 
 **Output:**
-- Business name
-- ABN validity
-- Mock/live data source
+- Mock business name (deterministic based on ABN hash)
+- Mock status (Active/Cancelled)
+- Mode indicator: "mock"
 
-**Note:** Uses MockABNLookupService by default. To test with real ABN API, configure GUID in application.yml.
+---
+
+## ABN Lookup Service - Real Mode
+
+Test with actual Australian Business Register API (requires Spring context and GUID).
+
+```bash
+# Demo mode (tests sample ABNs with real API)
+mvn compile exec:java -Dexec.mainClass="com.diligence.tools.RealABNLookupMain"
+
+# Test specific ABN with real API
+mvn compile exec:java -Dexec.mainClass="com.diligence.tools.RealABNLookupMain" \
+  -Dexec.args="50110219460"
+```
+
+**Prerequisites:**
+- ABN Lookup GUID configured in `application.yml` (abn.lookup.guid)
+- Internet connection for API calls
+- Mode set to live in application.yml (abn.mode=live)
+
+**Output:**
+- Real business name from registry
+- Business status
+- Mode indicator: "live"
+
+**Example Output:**
+```
+--- ABN: 50110219460 ---
+Result:
+  ABN: 50110219460
+  Name: APPLE AUSTRALIA PTY LIMITED
+  Status: Active
+  Found: ✅ Yes
+  Mode: live
+```
 
 ---
 
