@@ -10,61 +10,27 @@ public class RealABNLookupMain {
 
     public static void main(String[] args) throws Exception {
         // Separate user ABN input from properties
-        String userAbn = "26008672179";
-        boolean liveMode = true;
+        String abn = "26008672179";
 
-        for (String arg : args) {
-            if ("--abn.mode=live".equals(arg)) {
-                liveMode = true;
-            } else if (arg.matches("\\d{11}")) {
-                userAbn = arg;
-            }
-        }
+        // Instantiate ABNLookupService directly with RestTemplate
+        RestTemplate restTemplate = createRestTemplateForABN();
+        IABNLookupService service = new ABNLookupService(restTemplate);
 
-        // Choose service based on mode
-        IABNLookupService abnService;
-        if (liveMode) {
-            // Instantiate ABNLookupService directly with RestTemplate
-            RestTemplate restTemplate = createRestTemplateForABN();
-            ABNLookupService liveService = new ABNLookupService(restTemplate);
-
-            // Inject configuration via reflection
-            setFieldValue(liveService, "baseUrl", "https://abr.business.gov.au");
-            setFieldValue(liveService, "guid", readGuidFromProperties());
-
-            abnService = liveService;
-        } else {
-            // For demo/test, use mock service (no Spring needed)
-            abnService = new MockABNLookupService();
-        }
+        // Inject configuration via reflection
+        setFieldValue(service, "baseUrl", "https://abr.business.gov.au");
+        setFieldValue(service, "guid", readGuidFromProperties());
 
         System.out.println("=== ABN Lookup Service - Real Mode ===\n");
-        System.out.println("Mode: " + abnService.getMode() + "\n");
+        System.out.println("Mode: " + service.getMode() + "\n");
 
-        if (userAbn == null) {
-            demoMode(abnService);
-        } else {
-            testMode(abnService, userAbn);
-        }
-    }
-
-    private static void demoMode(IABNLookupService abnService) {
-        System.out.println("--- Demo Mode: Testing Real ABN Lookups ---\n");
-
-        testABN("50110219460", "Apple Australia Pty Ltd", abnService);
-        testABN("99999999999", "Invalid/Not Found", abnService);
-    }
-
-    private static void testMode(IABNLookupService abnService, String abn) {
         System.out.println("Testing ABN: " + abn + "\n");
-        testABN(abn, null, abnService);
+        testABN(abn, service);
     }
 
-    private static void testABN(String abn, String description, IABNLookupService abnService) {
+
+    private static void testABN(String abn, IABNLookupService abnService) {
+    	
         System.out.println("--- ABN: " + abn + " ---");
-        if (description != null) {
-            System.out.println("Expected: " + description);
-        }
         System.out.println();
 
         try {
