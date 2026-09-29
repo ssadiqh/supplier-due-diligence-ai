@@ -1,14 +1,14 @@
 package com.diligence.tools;
 
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.MediaType;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
 public class RealABNLookupMain {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // Separate user ABN input from properties
         String userAbn = "26008672179";
         boolean liveMode = true;
@@ -24,9 +24,15 @@ public class RealABNLookupMain {
         // Choose service based on mode
         IABNLookupService abnService;
         if (liveMode) {
-            // For live mode, instantiate ABNLookupService with RestTemplate directly
-            // (avoids full Spring context initialization)
-            abnService = new LiveABNLookupServiceWrapper();
+            // Instantiate ABNLookupService directly with RestTemplate
+            RestTemplate restTemplate = createRestTemplateForABN();
+            ABNLookupService liveService = new ABNLookupService(restTemplate);
+
+            // Inject configuration via reflection
+            setFieldValue(liveService, "baseUrl", "https://abr.business.gov.au");
+            setFieldValue(liveService, "guid", readGuidFromProperties());
+
+            abnService = liveService;
         } else {
             // For demo/test, use mock service (no Spring needed)
             abnService = new MockABNLookupService();
@@ -79,72 +85,37 @@ public class RealABNLookupMain {
         }
     }
 
-    /**
-     * Wrapper to instantiate ABNLookupService without Spring context
-     * Uses reflection to inject RestTemplate and configuration
-     * Configures RestTemplate to handle ABN API's text/javascript content-type
-     */
-    private static class LiveABNLookupServiceWrapper implements IABNLookupService {
-        private ABNLookupService delegate;
+    private static RestTemplate createRestTemplateForABN() {
+        RestTemplate restTemplate = new RestTemplate();
 
-        LiveABNLookupServiceWrapper() {
-            try {
-                // Create RestTemplate with custom message converter
-                // ABN API returns text/javascript instead of application/json
-                RestTemplate restTemplate = createRestTemplateForABN();
-                this.delegate = new ABNLookupService(restTemplate);
-
-                // Inject configuration via reflection
-                setFieldValue(delegate, "baseUrl", "https://abr.business.gov.au");
-                setFieldValue(delegate, "guid", readGuidFromProperties());
-
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to initialize live ABN lookup service: " + e.getMessage(), e);
+        // Configure message converters to accept text/javascript as plain text
+        // (ABN API returns JavaScript function call: Response({...}), not JSON)
+        restTemplate.getMessageConverters().forEach(converter -> {
+            if (converter instanceof StringHttpMessageConverter) {
+                ((StringHttpMessageConverter) converter)
+                    .setSupportedMediaTypes(Arrays.asList(
+                        MediaType.TEXT_PLAIN,
+                        MediaType.valueOf("text/javascript"),
+                        MediaType.valueOf("application/javascript")
+                    ));
             }
+        });
+
+        return restTemplate;
+    }
+
+    private static void setFieldValue(Object obj, String fieldName, Object value) throws Exception {
+        Field field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(obj, value);
+    }
+
+    private static String readGuidFromProperties() {
+        // Read GUID from application.yml via System property or return configured default
+        String guid = System.getProperty("abn.lookup.guid");
+        if (guid == null || guid.isEmpty()) {
+            guid = "99b624c4-7e1b-4c68-ad56-2ce50d6af75c";  // Default from application.yml
         }
-
-        private static RestTemplate createRestTemplateForABN() {
-            RestTemplate restTemplate = new RestTemplate();
-
-            // Configure message converters to accept text/javascript as plain text
-            // (ABN API returns JavaScript function call: Response({...}), not JSON)
-            restTemplate.getMessageConverters().forEach(converter -> {
-                if (converter instanceof org.springframework.http.converter.StringHttpMessageConverter) {
-                    ((org.springframework.http.converter.StringHttpMessageConverter) converter)
-                        .setSupportedMediaTypes(Arrays.asList(
-                            MediaType.TEXT_PLAIN,
-                            MediaType.valueOf("text/javascript"),
-                            MediaType.valueOf("application/javascript")
-                        ));
-                }
-            });
-
-            return restTemplate;
-        }
-
-        private static void setFieldValue(Object obj, String fieldName, Object value) throws Exception {
-            Field field = obj.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(obj, value);
-        }
-
-        private static String readGuidFromProperties() {
-            // Read GUID from application.yml via System property or return configured default
-            String guid = System.getProperty("abn.lookup.guid");
-            if (guid == null || guid.isEmpty()) {
-                guid = "99b624c4-7e1b-4c68-ad56-2ce50d6af75c";  // Default from application.yml
-            }
-            return guid;
-        }
-
-        @Override
-        public ABNLookupService.ABNLookupResult lookupABN(String abn) {
-            return delegate.lookupABN(abn);
-        }
-
-        @Override
-        public String getMode() {
-            return "live";
-        }
+        return guid;
     }
 }
