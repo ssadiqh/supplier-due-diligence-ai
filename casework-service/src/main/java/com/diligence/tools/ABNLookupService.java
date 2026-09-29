@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
@@ -95,6 +96,28 @@ public class ABNLookupService implements IABNLookupService {
      *
      * API Docs: https://abr.business.gov.au/Documentation/WebServiceRegistration
      */
+    /**
+     * Parse JavaScript response from ABN API
+     * API returns: Response({"ABN":"...", "EntityName":"...", ...})
+     * Extract JSON object from within JavaScript function call
+     */
+    private AbnDetailsResponse parseJavaScriptResponse(String rawResponse) throws Exception {
+        // Extract JSON from JavaScript: Response({...})
+        int jsonStart = rawResponse.indexOf('{');
+        int jsonEnd = rawResponse.lastIndexOf('}') + 1;
+
+        if (jsonStart == -1 || jsonEnd <= jsonStart) {
+            log.error("Could not find JSON object in response: {}", rawResponse.substring(0, Math.min(200, rawResponse.length())));
+            throw new RuntimeException("ABN API response does not contain valid JSON object");
+        }
+
+        String jsonStr = rawResponse.substring(jsonStart, jsonEnd);
+        log.debug("Extracted JSON: {}", jsonStr.substring(0, Math.min(200, jsonStr.length())));
+
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(jsonStr, AbnDetailsResponse.class);
+    }
+
     private ABNLookupResult callABNAPI(String abn) {
         if (guid == null || guid.isEmpty()) {
             // In LIVE mode, fail closed - do not fall back to mock data
@@ -113,8 +136,12 @@ public class ABNLookupService implements IABNLookupService {
 
             log.debug("Calling ABN Lookup API: /json/AbnDetails.aspx?abn={}&guid=***", abn);
 
-            // Call official ABN Lookup API
-            AbnDetailsResponse response = restTemplate.getForObject(url, AbnDetailsResponse.class);
+            // Call official ABN Lookup API - returns raw response to handle JavaScript wrapper
+            String rawResponse = restTemplate.getForObject(url, String.class);
+            log.debug("Raw API response (first 500 chars): {}", rawResponse.substring(0, Math.min(500, rawResponse.length())));
+
+            // Parse JavaScript response (API returns JS function call, not JSON)
+            AbnDetailsResponse response = parseJavaScriptResponse(rawResponse);
 
             if (response == null) {
                 log.warn("ABN {} - no response from registry", abn);
@@ -146,23 +173,44 @@ public class ABNLookupService implements IABNLookupService {
     /**
      * ABN Lookup API JSON response
      * Maps to actual ABN Lookup /json/AbnDetails.aspx endpoint response
+     * Note: API field names differ from documentation:
+     * - Actual: "Abn", "AbnName", "AbnStatus"
+     * - Documented: "ABN", "EntityName", "EntityStatus"
      */
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public static class AbnDetailsResponse {
-        @JsonProperty("ABN")
+        @JsonProperty(value = "ABN", defaultValue = "")
+        @com.fasterxml.jackson.annotation.JsonAlias({"Abn"})
         private String abn;
 
-        @JsonProperty("EntityName")
-        private String businessName;
+        @JsonProperty(value = "EntityName", defaultValue = "Unknown")
+        @com.fasterxml.jackson.annotation.JsonAlias({"AbnName", "BusinessName"})
+        private Object businessName;
 
-        @JsonProperty("EntityStatus")
-        private String businessStatus;
+        @JsonProperty(value = "EntityStatus", defaultValue = "Unknown")
+        @com.fasterxml.jackson.annotation.JsonAlias({"AbnStatus", "BusinessStatus", "Status"})
+        private Object businessStatus;
 
         public String getBusinessName() {
-            return businessName != null ? businessName : "Unknown";
+            if (businessName == null) return "Unknown";
+            if (businessName instanceof String) return (String) businessName;
+            // Handle array case (API returns [name] for some fields)
+            if (businessName instanceof java.util.List) {
+                java.util.List<?> list = (java.util.List<?>) businessName;
+                return list.isEmpty() ? "Unknown" : list.get(0).toString();
+            }
+            return businessName.toString();
         }
 
         public String getBusinessStatus() {
-            return businessStatus != null ? businessStatus : "Unknown";
+            if (businessStatus == null) return "Unknown";
+            if (businessStatus instanceof String) return (String) businessStatus;
+            // Handle array case
+            if (businessStatus instanceof java.util.List) {
+                java.util.List<?> list = (java.util.List<?>) businessStatus;
+                return list.isEmpty() ? "Unknown" : list.get(0).toString();
+            }
+            return businessStatus.toString();
         }
 
         public boolean isSuccess() {

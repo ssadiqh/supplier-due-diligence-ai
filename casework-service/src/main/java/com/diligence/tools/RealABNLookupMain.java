@@ -106,15 +106,19 @@ public class RealABNLookupMain {
         private static RestTemplate createRestTemplateForABN() {
             RestTemplate restTemplate = new RestTemplate();
 
-            // Configure Jackson converter to accept text/javascript as JSON
-            MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-            converter.setSupportedMediaTypes(Arrays.asList(
-                MediaType.APPLICATION_JSON,
-                MediaType.valueOf("text/javascript"),
-                MediaType.valueOf("text/plain")
-            ));
+            // Configure message converters to accept text/javascript as plain text
+            // (ABN API returns JavaScript function call: Response({...}), not JSON)
+            restTemplate.getMessageConverters().forEach(converter -> {
+                if (converter instanceof org.springframework.http.converter.StringHttpMessageConverter) {
+                    ((org.springframework.http.converter.StringHttpMessageConverter) converter)
+                        .setSupportedMediaTypes(Arrays.asList(
+                            MediaType.TEXT_PLAIN,
+                            MediaType.valueOf("text/javascript"),
+                            MediaType.valueOf("application/javascript")
+                        ));
+                }
+            });
 
-            restTemplate.getMessageConverters().add(0, converter);
             return restTemplate;
         }
 
