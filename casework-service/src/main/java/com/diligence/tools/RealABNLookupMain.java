@@ -10,8 +10,8 @@ public class RealABNLookupMain {
 
     public static void main(String[] args) {
         // Separate user ABN input from properties
-        String userAbn = null;
-        boolean liveMode = false;
+        String userAbn = "26008672179";
+        boolean liveMode = true;
 
         for (String arg : args) {
             if ("--abn.mode=live".equals(arg)) {
