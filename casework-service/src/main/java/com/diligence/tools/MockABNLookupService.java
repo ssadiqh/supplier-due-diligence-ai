@@ -5,10 +5,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 /**
- * Mock ABN Lookup Service for development and testing
+ * Mock ABN Lookup Service - TEST ONLY
  * Returns synthetic data without calling real API
  *
- * Enable with: abn.mode=mock or leave unconfigured (default)
+ * Loaded only when abn.mode != "live" (default for tests)
+ * Never used in production deployment
  */
 @Slf4j
 @Service
