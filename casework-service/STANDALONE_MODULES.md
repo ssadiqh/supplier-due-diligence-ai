@@ -124,7 +124,14 @@ Result:
   Mode: live
 ```
 
-**Known Issue:** ABN API responds with `text/javascript;charset=utf-8` instead of `application/json`. This causes deserialization errors. Workaround: Configure Jackson or RestTemplate to handle this content-type.
+**Known Issue:** Australian Business Register API returns `text/javascript;charset=utf-8` content instead of JSON. The API call succeeds, but response parsing fails because the format is JavaScript code, not standard JSON.
+
+**Workaround:** 
+1. Parse JavaScript response with a specialized parser, or
+2. Use the mock/demo mode for testing without API dependency, or  
+3. Check if the API has a JSON endpoint alternative
+
+See ABNLookupService for response format details.
 
 ---
 
