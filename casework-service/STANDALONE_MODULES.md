@@ -24,27 +24,33 @@ mvn compile exec:java -Dexec.mainClass="com.diligence.extraction.DocumentParserM
 
 ## Rule Service
 
-Test business rule evaluation without database or Spring context.
+RuleService requires Spring Boot context and database repositories. Use the REST API instead:
 
 ```bash
-# Demo mode (tests valid/invalid/missing ABNs)
-mvn compile exec:java -Dexec.mainClass="com.diligence.rules.RuleServiceMain"
+# Start the application
+mvn spring-boot:run
 
-# Test specific ABN
-mvn compile exec:java -Dexec.mainClass="com.diligence.rules.RuleServiceMain" \
-  -Dexec.args="12345678901"
+# Create a case
+curl -X POST http://localhost:8080/api/cases \
+  -H "Content-Type: application/json" \
+  -d '{"supplierName": "Test Company", "supplierAbn": "12345678901"}'
+
+# Evaluate all rules for a case
+curl -X POST http://localhost:8080/api/cases/{caseId}/rules/evaluate-all
+
+# View rule results
+curl http://localhost:8080/api/cases/{caseId}/rules/results
 ```
 
-**Output:**
-- Rule outcome (PASS/FAIL/ERROR/NOT_EVALUATED)
-- Rule explanation
-- Evaluation timestamp
-
-**Rules Tested:**
+**Rules Implemented:**
 - ABN validation (checksum verification)
-- Sanctions check (mock database)
-- Industry restrictions
+- Business registration
 - Financial thresholds
+- Industry restrictions
+- Compliance history
+- Beneficial ownership
+- Political exposure
+- Sanctions checking
 
 ---
 
