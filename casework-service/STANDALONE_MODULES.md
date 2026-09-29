@@ -90,9 +90,9 @@ mvn compile exec:java -Dexec.mainClass="com.diligence.tools.RealABNLookupMain" \
 
 **Prerequisites:**
 - ABN Lookup GUID configured in `application.yml` (abn.lookup.guid)
-- RestTemplate bean available (provided by RestConfig)
 - Internet connection for API calls
-- Spring context initialization (~10 seconds startup)
+
+**Note:** No Spring context required - uses direct instantiation with RestTemplate
 
 **What it does:**
 - Initializes Spring context (without web server)
@@ -124,7 +124,7 @@ Result:
   Mode: live
 ```
 
-**Note:** Content-type handling issue with ABN API (responds with text/javascript instead of application/json) being addressed in ABNLookupService configuration.
+**Known Issue:** ABN API responds with `text/javascript;charset=utf-8` instead of `application/json`. This causes deserialization errors. Workaround: Configure Jackson or RestTemplate to handle this content-type.
 
 ---
 
