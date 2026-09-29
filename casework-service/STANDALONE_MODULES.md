@@ -76,30 +76,46 @@ mvn compile exec:java -Dexec.mainClass="com.diligence.tools.ABNLookupServiceMain
 
 ## ABN Lookup Service - Real Mode
 
-Test with actual Australian Business Register API (requires Spring context and GUID).
+Test with actual Australian Business Register API (requires Spring context, RestTemplate, and GUID).
 
 ```bash
 # Demo mode (tests sample ABNs with real API)
-mvn compile exec:java -Dexec.mainClass="com.diligence.tools.RealABNLookupMain"
+mvn compile exec:java -Dexec.mainClass="com.diligence.tools.RealABNLookupMain" \
+  -Dexec.args="--abn.mode=live"
 
 # Test specific ABN with real API
 mvn compile exec:java -Dexec.mainClass="com.diligence.tools.RealABNLookupMain" \
-  -Dexec.args="50110219460"
+  -Dexec.args="--abn.mode=live 50110219460"
 ```
 
 **Prerequisites:**
 - ABN Lookup GUID configured in `application.yml` (abn.lookup.guid)
+- RestTemplate bean available (provided by RestConfig)
 - Internet connection for API calls
-- Mode set to live in application.yml (abn.mode=live)
+- Spring context initialization (~10 seconds startup)
+
+**What it does:**
+- Initializes Spring context (without web server)
+- Disables database/Flyway (only needs HTTP client)
+- Makes real HTTP calls to Australian Business Register
+- Returns actual business registry data
 
 **Output:**
 - Real business name from registry
 - Business status
 - Mode indicator: "live"
 
-**Example Output:**
+**Example Output (demo mode):**
 ```
+=== ABN Lookup Service - Real Mode ===
+
+Mode: live
+
+--- Demo Mode: Testing Real ABN Lookups ---
+
 --- ABN: 50110219460 ---
+Expected: Apple Australia Pty Ltd
+
 Result:
   ABN: 50110219460
   Name: APPLE AUSTRALIA PTY LIMITED
@@ -107,6 +123,8 @@ Result:
   Found: ✅ Yes
   Mode: live
 ```
+
+**Note:** Content-type handling issue with ABN API (responds with text/javascript instead of application/json) being addressed in ABNLookupService configuration.
 
 ---
 
