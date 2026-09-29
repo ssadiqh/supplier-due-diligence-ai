@@ -124,14 +124,13 @@ Result:
   Mode: live
 ```
 
-**Known Issue:** Australian Business Register API returns `text/javascript;charset=utf-8` content instead of JSON. The API call succeeds, but response parsing fails because the format is JavaScript code, not standard JSON.
+**Status:** ✅ **WORKING** - Successfully parses ABN API's JavaScript response format
 
-**Workaround:** 
-1. Parse JavaScript response with a specialized parser, or
-2. Use the mock/demo mode for testing without API dependency, or  
-3. Check if the API has a JSON endpoint alternative
-
-See ABNLookupService for response format details.
+The API returns JavaScript function call responses with different field names than documentation, which is now handled correctly with:
+- JSON extraction from JavaScript wrapper
+- Field alias mapping for actual API field names  
+- Flexible parsing of String or Array values
+- Support for text/javascript content-type
 
 ---
 
