@@ -1,7 +1,10 @@
 package com.diligence.tools;
 
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.MediaType;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 public class RealABNLookupMain {
 
@@ -79,14 +82,16 @@ public class RealABNLookupMain {
     /**
      * Wrapper to instantiate ABNLookupService without Spring context
      * Uses reflection to inject RestTemplate and configuration
+     * Configures RestTemplate to handle ABN API's text/javascript content-type
      */
     private static class LiveABNLookupServiceWrapper implements IABNLookupService {
         private ABNLookupService delegate;
 
         LiveABNLookupServiceWrapper() {
             try {
-                // Create ABNLookupService with RestTemplate
-                RestTemplate restTemplate = new RestTemplate();
+                // Create RestTemplate with custom message converter
+                // ABN API returns text/javascript instead of application/json
+                RestTemplate restTemplate = createRestTemplateForABN();
                 this.delegate = new ABNLookupService(restTemplate);
 
                 // Inject configuration via reflection
@@ -96,6 +101,21 @@ public class RealABNLookupMain {
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize live ABN lookup service: " + e.getMessage(), e);
             }
+        }
+
+        private static RestTemplate createRestTemplateForABN() {
+            RestTemplate restTemplate = new RestTemplate();
+
+            // Configure Jackson converter to accept text/javascript as JSON
+            MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+            converter.setSupportedMediaTypes(Arrays.asList(
+                MediaType.APPLICATION_JSON,
+                MediaType.valueOf("text/javascript"),
+                MediaType.valueOf("text/plain")
+            ));
+
+            restTemplate.getMessageConverters().add(0, converter);
+            return restTemplate;
         }
 
         private static void setFieldValue(Object obj, String fieldName, Object value) throws Exception {
